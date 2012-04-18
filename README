@@ -1,0 +1,4 @@
+To build you need:
+* cmake (>=2.6)
+* opencv (>=2.0)
+* qt (>=4.2)

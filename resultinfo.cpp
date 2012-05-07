@@ -1,4 +1,5 @@
 #include "resultinfo.h"
+#include <QDebug>
 
 ResultInfo::ResultInfo(std::vector<size_t>* edges, QString fileName, Image* image, QWidget *parent) :
     QWidget(parent)
@@ -53,6 +54,7 @@ void ResultInfo::ssave()
     name.append(".");
     name.append(QDateTime::currentDateTime().toString("yyyy.mm.dd hh.mm.ss"));
     name.append(".txt");
+    qDebug() << name;
     QFile* file = new QFile(name);
     if (!file->open(QIODevice::WriteOnly | QIODevice::Text))
     {

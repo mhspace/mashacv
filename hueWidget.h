@@ -5,7 +5,8 @@
 #include <opencv2/opencv.hpp>
 
 #include "colorEdgesDetection.h"
-
+#include <QAbstractScrollArea>
+#include <QScrollArea>
 #include <QFileDialog>
 #include <QImage>
 #include <QGraphicsPixmapItem>
@@ -33,13 +34,14 @@ class MainWidget : public QWidget
     Q_OBJECT
 
 public:
-    MainWidget(QWidget *parent = 0);
+    MainWidget(QString filename, QWidget *parent = 0);
     ~MainWidget();
 
 private:
     Image* image;
     QVBoxLayout* layout;
     QHBoxLayout* buttonsLayout;
+    QAbstractScrollArea* buttonsarea;
     QVBoxLayout* colorRangeLayout;
 
     QPushButton* openImageButton;
@@ -97,7 +99,7 @@ private:
 
 
 private slots:
-    void openNewImage();
+    void openNewImage(QString filename);
     void calculate();
     void updateRasterMask();
     void updateItemBasedMask();

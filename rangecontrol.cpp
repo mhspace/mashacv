@@ -4,13 +4,26 @@ RangeControl::RangeControl(QString channelName, Mat *channelMaskLUT, unsigned in
     QGroupBox(channelName, parent)
 {
     this->upperLimitOfTheRange = new QSlider(Qt::Horizontal);
+
+
+    if (channelName == "H")
+    {
+        this->huepixmap = new QPixmap(QString::fromUtf8(":/images/hueline.png"));
+        this->huelabel = new QLabel();
+        this->huelabel->setPixmap(*this->huepixmap);
+        this->huelabel->setScaledContents(true);
+    }
+
     this->lowerLimitOfTheRange = new QSlider(Qt::Horizontal);
+
 
     this->channelName = channelName;
     this->channelMaskLUT = channelMaskLUT;
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(this->lowerLimitOfTheRange);
+    if (channelName == "H")
+        layout->addWidget(this->huelabel);
     layout->addWidget(this->upperLimitOfTheRange);
 
     this->lowerLimitOfTheRange->setMinimum(0);

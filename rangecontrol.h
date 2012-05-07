@@ -8,6 +8,8 @@
 
 #include <QtGui/QSlider>
 #include <QVBoxLayout>
+#include <QPixmap>
+#include <QLabel>
 
 #include <QDebug>
 
@@ -32,6 +34,8 @@ public slots:
 private:
     QSlider* lowerLimitOfTheRange;
     QSlider* upperLimitOfTheRange;
+    QPixmap* huepixmap;
+    QLabel* huelabel;
 
 private slots:
     void updateChannelMaskLUT();

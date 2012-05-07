@@ -2,11 +2,11 @@
 #include <fstream>
 #include <iostream>
 
-Image::Image(std::string fileName)
+Image::Image(QString fileName)
 {
     this->imageFileName = fileName;
 
-    this->originalImage = imread(this->imageFileName, -1);
+    this->originalImage = imread((std::string)this->imageFileName.toLocal8Bit(), -1);
 
     Mat HSVImage;
     cvtColor(this->originalImage, HSVImage, CV_BGR2HSV_FULL);
@@ -25,7 +25,7 @@ Image::Image(std::string fileName)
     this->channelsNames.push_back("S");
     this->channelsNames.push_back("V");
 
-    ifstream fcrange((this->imageFileName + ".colorrange").c_str());
+    ifstream fcrange(((std::string)this->imageFileName.toLocal8Bit() + ".colorrange").c_str());
     if (fcrange)
     {
         for (int i = 0; i < nchannels; i++)
@@ -43,11 +43,11 @@ Image::Image(std::string fileName)
         fcrange.close();
     }
 
-    ifstream fmask((this->imageFileName + ".mask.png").c_str());
+    ifstream fmask(((std::string)this->imageFileName.toLocal8Bit() + ".mask.png").c_str());
     if (fmask)
     {
         fmask.close();
-        this->selMask = imread(this->imageFileName + ".mask.png", 0);
+        this->selMask = imread((std::string)this->imageFileName.toLocal8Bit() + ".mask.png", 0);
     }
     else
     {
@@ -78,12 +78,12 @@ Mat *Image::getRasterMergedMask()
 
 void Image::saveSel()
 {
-    imwrite(this->imageFileName + ".mask.png", this->selMask);
+    imwrite((std::string)this->imageFileName.toLocal8Bit() + ".mask.png", this->selMask);
 }
 
 void Image::saveChannelMask()
 {
-    ofstream fcrange((this->imageFileName + ".colorrange").c_str());
+    ofstream fcrange(((std::string)this->imageFileName.toLocal8Bit() + ".colorrange").c_str());
     for (int i = 0; i < nchannels; i++)
         fcrange << this->channelsMaskLUT.at(i) << std::endl;
     fcrange.flush();

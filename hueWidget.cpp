@@ -2,14 +2,16 @@
 #include <math.h>
 #include <qapplication.h>
 #include <fstream>
-#define pointRadius 10
-#define colordelta 40
+#define pointRadius 100
+#define colordelta 10
 
-MainWidget::MainWidget(QWidget *parent)
+MainWidget::MainWidget(QString filename, QWidget *parent)
     : QWidget(parent)
 {
     this->layout = new QVBoxLayout();
     this->buttonsLayout = new QHBoxLayout();
+    this->buttonsarea = new QScrollArea();
+    this->buttonsarea->setLayout(this->buttonsLayout);
 
     this->openImageButton = new QPushButton(QString::fromUtf8("ПЫЩЬ"));//Load Image");
     this->calculateButton = new QPushButton(QString::fromUtf8("ПЫЩЬ"));//Calculate");
@@ -32,6 +34,8 @@ MainWidget::MainWidget(QWidget *parent)
     this->sel = (uchar)1;
     this->selectionBrushSize = new QSpinBox();
     this->selectionBrushSize->setValue(pointRadius);
+    qDebug() << pow(2, sizeof(int)*8 - 1) - 1;
+    this->selectionBrushSize->setMaximum(pow(2, sizeof(int)*8 - 1) - 1);
     this->min = new QSpinBox();
     this->min->setRange(0, pow(2, (sizeof(int)*8 - 1)) - 1);
     this->min->setValue(0);
@@ -65,7 +69,8 @@ MainWidget::MainWidget(QWidget *parent)
     this->buttonsLayout->addWidget(this->savemisc);
     this->buttonsLayout->addWidget(this->saveall);
 
-    this->layout->addLayout(this->buttonsLayout);
+    this->layout->addWidget(this->buttonsarea);
+    //this->layout->addLayout(this->buttonsLayout);
     this->colorRangeLayout = new QVBoxLayout();
     this->layout->addLayout(this->colorRangeLayout);
     //this->layout->addWidget(this->tabBar);
@@ -109,7 +114,7 @@ MainWidget::MainWidget(QWidget *parent)
 
 
 
-this->openNewImage(); // debug
+this->openNewImage(filename); // debug
 }
 
 MainWidget::~MainWidget()
@@ -117,13 +122,18 @@ MainWidget::~MainWidget()
 
 }
 
-void MainWidget::openNewImage()
+void MainWidget::openNewImage(QString filename)
 {
-    QString fileName = QFileDialog::getOpenFileName(this,
-         "Open Image", "/home/misha/", "Image Files (*.png *.jpg)");
+    QString fileName = filename;
+    if (fileName == "")
+    {
+        fileName = QFileDialog::getOpenFileName(this,
+             "Open Image", "/home/misha/", "Image Files (*.png *.jpg)");
+    }
+
     if (fileName != "")
     {
-        this->image = new Image((string)(fileName.toLocal8Bit()));
+        this->image = new Image(fileName);
 
         for (int i = 0; i < this->image->nchannels; i++)
         {
@@ -135,7 +145,7 @@ void MainWidget::openNewImage()
 
         this->updateGraphicsViewFromMat();
     }
-    ifstream fmisc((this->image->imageFileName + ".misc").c_str());
+    ifstream fmisc(((std::string)this->image->imageFileName.toLocal8Bit() + ".misc").c_str());
     if (fmisc)
     {
         char selecting[255];
@@ -322,7 +332,7 @@ void MainWidget::calculate()
                         edges->push_back(this->edges->at(i));
             }
         }
-        ResultInfo* info = new ResultInfo(edges, QString::fromStdString(this->image->imageFileName), this->image);
+        ResultInfo* info = new ResultInfo(edges, QString(image->imageFileName), this->image);
     }
 }
 
@@ -433,7 +443,7 @@ void MainWidget::saveSelection()
 
 void MainWidget::saveMisc()
 {
-    ofstream fmisc((this->image->imageFileName + ".misc").c_str());
+    ofstream fmisc(((std::string)this->image->imageFileName.toLocal8Bit() + ".misc").c_str());
     fmisc << (int)(this->selecting) << std::endl;
     fmisc << (int)(this->sel) << std::endl;
     fmisc << this->selectionBrushSize->value() << std::endl;

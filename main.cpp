@@ -2,7 +2,7 @@
 #include "colorEdgesDetection.h"
 #include "hueWidget.h"
 #include <opencv2/opencv.hpp>
-
+#include <QString>
 #include <QtGui/QApplication>
 #include <QtGui/QWidget>
 #include <QVBoxLayout>
@@ -13,12 +13,14 @@ using namespace cv;
 
 int main(int argc, char *argv[])
 {
-  if (argc == 1)
+  if (argc >= 1)
     {
       // using GUI
 
       QApplication a(argc, argv);
-      MainWidget w;
+      QString filename = QString::fromLocal8Bit(argv[1]);
+
+      MainWidget w(filename);
 
       w.show();
 

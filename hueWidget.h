@@ -41,7 +41,8 @@ private:
     Image* image;
     QVBoxLayout* layout;
     QHBoxLayout* buttonsLayout;
-    QAbstractScrollArea* buttonsarea;
+    QScrollArea* buttonsarea;
+    QWidget* buttonswidget;
     QVBoxLayout* colorRangeLayout;
 
     QPushButton* openImageButton;

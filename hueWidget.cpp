@@ -11,7 +11,9 @@ MainWidget::MainWidget(QString filename, QWidget *parent)
     this->layout = new QVBoxLayout();
     this->buttonsLayout = new QHBoxLayout();
     this->buttonsarea = new QScrollArea();
-    this->buttonsarea->setLayout(this->buttonsLayout);
+    this->buttonswidget = new QWidget();
+    this->buttonswidget->setLayout(this->buttonsLayout);
+
 
     this->openImageButton = new QPushButton(QString::fromUtf8("ПЫЩЬ"));//Load Image");
     this->calculateButton = new QPushButton(QString::fromUtf8("ПЫЩЬ"));//Calculate");
@@ -34,7 +36,7 @@ MainWidget::MainWidget(QString filename, QWidget *parent)
     this->sel = (uchar)1;
     this->selectionBrushSize = new QSpinBox();
     this->selectionBrushSize->setValue(pointRadius);
-    qDebug() << pow(2, sizeof(int)*8 - 1) - 1;
+
     this->selectionBrushSize->setMaximum(pow(2, sizeof(int)*8 - 1) - 1);
     this->min = new QSpinBox();
     this->min->setRange(0, pow(2, (sizeof(int)*8 - 1)) - 1);
@@ -69,12 +71,15 @@ MainWidget::MainWidget(QString filename, QWidget *parent)
     this->buttonsLayout->addWidget(this->savemisc);
     this->buttonsLayout->addWidget(this->saveall);
 
+
+    this->buttonsarea->setWidget(this->buttonswidget);
     this->layout->addWidget(this->buttonsarea);
     //this->layout->addLayout(this->buttonsLayout);
     this->colorRangeLayout = new QVBoxLayout();
     this->layout->addLayout(this->colorRangeLayout);
     //this->layout->addWidget(this->tabBar);
     this->layout->addWidget(this->graphicsView);
+    this->layout->setStretchFactor(this->graphicsView, 999);
 
     this->setLayout(layout);
 

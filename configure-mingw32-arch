@@ -1,4 +1,0 @@
-#!/bin/sh
-unset LDFLAGS
-cmake $1 -DCMAKE_TOOLCHAIN_FILE=$1/cmake-toolchain-mingw32-arch.cmake 
--DCMAKE_INSTALL_PREFIX=/usr/i486-mingw32/

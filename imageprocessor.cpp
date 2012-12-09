@@ -51,38 +51,49 @@ QList<QDockWidget *> ImageProcessor::getDockWidgets()
     QList<QDockWidget *> docks;
     docks.append(this->colorDockWidget);
     //docks.append(this->layerManager);
-    //docks.append(this->toolsDockWidget);
+    docks.append(this->toolsDockWidget);
     docks.append(this->resultsDockWidget);
     return docks;
 }
 
 void ImageProcessor::pick(QPointF point)
 {
-    //TODO: предусмотреть вариант клика вне картинки.
-    //TODO: предусмотреть клик по пикселю с альфа-каналом. (надо ли?)
-    this->colorDockWidget->setColor(this->image->pixel(QPoint((int)(point.x()), (int)(point.y()))));
+    //DONE: предусмотреть вариант клика вне картинки.
+    //TODO: подумать, что делать при клике вне картинки.
+    //DONE: предусмотреть клик по пикселю с альфа-каналом. (надо ли?) - не надо.
+    qDebug() << point << image->size();
+    if (point.x() >= 0 && point.y() >= 0 && point.x() < image->width() && point.y() < image->height())
+        this->colorDockWidget->setColor(this->image->pixel(QPoint((int)(point.x()), (int)(point.y()))));
+    else
+        qDebug() << "ВНЕ КАРТИНКИ";
 }
-
+#include <QApplication>
 void ImageProcessor::processDataChange()
 {
+    this->previewTimer->stop();
     this->previewTimer->start(0);
-    this->calculateTimer->stop();
+    //this->calculateTimer->stop();
     //this->disableResults();
 }
 
 #include <QDebug>
 #include <cmath>
 #include <QTime>
-
+/*
 #define RED(QRgb) ((uchar*)(&QRgb))[1]
 #define GREEN(QRgb) ((uchar*)(&QRgb))[2]
 #define BLUE(QRgb) ((uchar*)(&QRgb))[3]
+*/
+#define RED(QRgb) qRed(QRgb)
+#define GREEN(QRgb) qGreen(QRgb)
+#define BLUE(QRgb) qBlue(QRgb)
 
 #define CIE76_RGB(x, y) sqrt(SQR(RED(x)-RED(y))+SQR(GREEN(x)-GREEN(y))+SQR(BLUE(x)-BLUE(y)))
 void ImageProcessor::processPreview()
 {
+
     int size = 0;
-    QRgb baseColor = this->colorDockWidget->rgb();
+    QRgb  baseColor = this->colorDockWidget->rgb();
     double maxDelta = this->colorDockWidget->getDelta();
 
     QTime starttime = QTime::currentTime();
@@ -90,17 +101,28 @@ void ImageProcessor::processPreview()
 
     const uchar * rawData = image->bits();
 
-    QRgb* source = (QRgb*)rawData;
+    QRgb*  source = (QRgb*)rawData;
 
-    for (int i = 0; i < this->imageNumberOfPixels; i++)
+    uchar *  mask = this->imageMaskLayer;
+    uchar *  matched = this->imageMatchedPixels;
+
+    const int pixels = this->imageNumberOfPixels;
+
+    for (int i = 0; i < pixels; i++)
     {
-        if ((this->imageMaskLayer[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta)) //TODO: Проверить корректность значений из макроса
+        size += matched[i] = (uchar)((mask[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta));
+        //if ((bool)matched[i])
+        //    size++;
+
+
+        /*
+        if ((mask[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta)) //TODO: Проверить корректность значений из макроса
         {
-            imageMatchedPixels[i] = (uchar)1;
+            matched[i] = (uchar)1;
             size++;
         }
         else
-            imageMatchedPixels[i] = (uchar)0;
+            matched[i] = (uchar)0;*/
     }
 
     QImage *qImageMatchedPixels = new QImage(imageMatchedPixels, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
@@ -112,6 +134,7 @@ void ImageProcessor::processPreview()
 
     qDebug() << "preview" << starttime.msecsTo(QTime::currentTime()) << size;
     //this->calculateTimer->start(0);
+    qApp->processEvents();
     this->processCalculate(size);
 }
 #include <QStack>
@@ -269,7 +292,10 @@ void ImageProcessor::processMaskChange()
     qImageMask->setColor(1, (uint)0xAA00FF00);
     this->layerManager->updateImageMask(qImageMask);
     delete qImageMask;
-    this->processDataChange();
+    this->previewTimer->stop();
+    this->previewTimer->start(50);
+   // qApp->processEvents();
+    //this->processDataChange();
 }
 
 void ImageProcessor::drawCircleOnMask(int x, int y, int radius, uchar value)

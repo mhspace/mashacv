@@ -12,6 +12,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = MashaCV
 TEMPLATE = app
+#QMAKE_CXXFLAGS_RELEASE -= -O2
+#QMAKE_CXXFLAGS_RELEASE += -O3 -funroll-all-loops -ftree-vectorize -msse -msse2 -msse3 -mfpmath=sse
 
 
 SOURCES += main.cpp\

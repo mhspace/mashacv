@@ -16,6 +16,16 @@ GraphicsView::~GraphicsView()
     delete ui;
 }
 
+void GraphicsView::setSceneRect(const QRectF &rect)
+{
+    this->ui->graphicsView->setSceneRect(rect);
+}
+
+void GraphicsView::setSceneRect(qreal x, qreal y, qreal w, qreal h)
+{
+    this->ui->graphicsView->setSceneRect(x, y, w, h);
+}
+
 void GraphicsView::setTransform(const QTransform &matrix, bool combine)
 {
     this->ui->graphicsView->setTransform(matrix, combine);
@@ -76,14 +86,34 @@ void GraphicsView::on_oneToOneZoomButton_clicked()
     this->updateZoom();
 }
 
-void GraphicsView::on_graphicsView_mousePressed(QPointF point)
+void GraphicsView::on_graphicsView_mousePressed(QPoint point)
 {
     emit mousePressed(point);
 }
 
-void GraphicsView::on_graphicsView_mouseMoved(QPointF point)
+void GraphicsView::on_graphicsView_mouseMoved(QPoint point)
 {
     emit mouseMoved(point);
+}
+
+void GraphicsView::on_graphicsView_mouseMovedWhileLeftMouseButtonPressed(QPoint point)
+{
+    emit mouseMovedWhileLeftMouseButtonPressed(point);
+}
+
+void GraphicsView::on_graphicsView_mouseMovedWhileLeftMouseButtonNotPressed(QPoint point)
+{
+    emit mouseMovedWhileLeftMouseButtonNotPressed(point);
+}
+
+void GraphicsView::on_graphicsView_mouseEntered()
+{
+    emit mouseEntered();
+}
+
+void GraphicsView::on_graphicsView_mouseLeaved()
+{
+    emit mouseLeaved();
 }
 
 void GraphicsView::on_zoomToFitButton_clicked()

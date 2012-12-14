@@ -1,6 +1,13 @@
 #include "imageprocessor.h"
 #include <QDebug>
 #include <QTime>
+
+#define DRAW_MASK_BRUSH_COLOR 0x60000000
+#define ERASE_MASK_BRUSH_COLOR 0x50FFFFFF
+#define MASK_COLOR 0xBA808080
+#define MATCHED_COLOR 0xFF00FFFF
+#define FILTERED_COLOR 0xAA444444
+
 #define SQR(s)  ((s) * (s))
 
 ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
@@ -12,6 +19,10 @@ ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
     this->imageMaskLayer = new uchar[this->imageNumberOfPixels];
     this->imageDisabledItemsOverlay = new uchar[this->imageNumberOfPixels];
     this->graphicsView = new GraphicsView();
+    this->graphicsView->setObjectName("graphicsView");
+    this->graphicsView->QObject::setParent(this);
+    this->graphicsView->setSceneRect(0, 0, this->image->width(), this->image->height());
+    connect(this->graphicsView, SIGNAL(mouseMovedWhileLeftMouseButtonNotPressed(QPoint)), this, SLOT(hover(QPoint)));
     this->graphicsScene = new QGraphicsScene();
     this->colorDockWidget = new ColorDockWidget();
     this->layerManager = new LayerDockWidget(this->graphicsScene);
@@ -56,14 +67,14 @@ QList<QDockWidget *> ImageProcessor::getDockWidgets()
     return docks;
 }
 
-void ImageProcessor::pick(QPointF point)
+void ImageProcessor::pick(QPoint point)
 {
     //DONE: предусмотреть вариант клика вне картинки.
     //TODO: подумать, что делать при клике вне картинки.
     //DONE: предусмотреть клик по пикселю с альфа-каналом. (надо ли?) - не надо.
     qDebug() << point << image->size();
     if (point.x() >= 0 && point.y() >= 0 && point.x() < image->width() && point.y() < image->height())
-        this->colorDockWidget->setColor(this->image->pixel(QPoint((int)(point.x()), (int)(point.y()))));
+        this->colorDockWidget->setColor(this->image->pixel(point));
     else
         qDebug() << "ВНЕ КАРТИНКИ";
 }
@@ -127,7 +138,7 @@ void ImageProcessor::processPreview()
 
     QImage *qImageMatchedPixels = new QImage(imageMatchedPixels, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
     qImageMatchedPixels->setColor(0, (uint)0x00000000);
-    qImageMatchedPixels->setColor(1, (uint)0xFF00FFFF);
+    qImageMatchedPixels->setColor(1, (uint)MATCHED_COLOR);
 
     this->layerManager->updateColorMask(qImageMatchedPixels);
     delete qImageMatchedPixels;
@@ -206,6 +217,10 @@ void ImageProcessor::processCalculate(int sum)
     QTime starttime = QTime::currentTime();
     int width = this->image->width();
     //collectingpoints Нужно ещё оптимизировать.
+
+    if (this->property("areasPoints").isValid())
+        delete[] (OnePointInfo*)(this->property("areasPoints").value<void*>());
+
     OnePointInfo* areasPoints = new OnePointInfo[sum]; //collectingpoints
     uint32_t globalindex = 0; //collectingpoints
     uint32_t pointindex = 0; //collectingpoints
@@ -280,6 +295,8 @@ void ImageProcessor::processCalculate(int sum)
 
     qDebug() << "calculate" << starttime.msecsTo(QTime::currentTime());
     //delete[] areasPoints;
+    this->setProperty("areasPoints", qVariantFromValue((void*)areasPoints));
+    this->setProperty("areasNumber", qVariantFromValue(sum));
     QVector<int> sizes_vector = sizes.toVector();
     this->showResults(sizes_vector);
     this->updateDisabledItemsOverlay(areasPoints, sum, sizes_vector);
@@ -289,7 +306,7 @@ void ImageProcessor::processMaskChange()
 {
     QImage *qImageMask = new QImage(this->imageMaskLayer, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
     qImageMask->setColor(0, (uint)0x00000000);
-    qImageMask->setColor(1, (uint)0xAA00FF00);
+    qImageMask->setColor(1, (uint)MASK_COLOR);
     this->layerManager->updateImageMask(qImageMask);
     delete qImageMask;
     this->previewTimer->stop();
@@ -332,19 +349,19 @@ void ImageProcessor::drawCircleOnArray(uchar *array, int x, int y, int width, in
             if (sqrt(SQR(yc - y) + SQR(xc - x)) <= radius)
                 array[yc*width + xc] = (uchar)value;
 }
-void ImageProcessor::drawMask(QPointF point)
+void ImageProcessor::drawMask(QPoint point)
 {
     this->drawCircleOnMask(point.x(), point.y(), this->toolsDockWidget->maskBrushSize(), (uchar)1);
 }
 
-void ImageProcessor::eraseMask(QPointF point)
+void ImageProcessor::eraseMask(QPoint point)
 {
     this->drawCircleOnMask(point.x(), point.y(), this->toolsDockWidget->maskBrushSize(), (uchar)0);
 }
 
-void ImageProcessor::updateBrushPosition(QPointF point)
+void ImageProcessor::updateBrushPosition(QPoint point)
 {
-    this->layerManager->updateBrushLayerPosition(point.toPoint());
+    this->layerManager->updateBrushLayerPosition(point);
 }
 
 #define IS_SIZE_BAD(size, min, max) (((size) < (min)) || ((size) > (max)))
@@ -380,11 +397,10 @@ void ImageProcessor::updateDisabledItemsOverlay(OnePointInfo *areasPoints, int s
 
         QImage *imageOverlay = new QImage(this->imageDisabledItemsOverlay, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
         imageOverlay->setColor(0, (uint)0x00000000);
-        imageOverlay->setColor(1, (uint)0xAA444444);
+        imageOverlay->setColor(1, (uint)FILTERED_COLOR);
         this->layerManager->updateDisabletItemsOverlayLayer(imageOverlay);
         this->showFilteredResults(sizes_filtered.toVector());
         delete imageOverlay;
-        delete[] areasPoints;
     }
     else
     {
@@ -401,52 +417,77 @@ void ImageProcessor::updateDisabledItemsOverlay(OnePointInfo *areasPoints, int s
 
 void ImageProcessor::on_toolsDockWidget_drawMask()
 {
-    this->graphicsView->disconnect(this);
+    //removing all shit
+    this->graphicsView->disconnect(this, SLOT(eraseMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(drawMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(pick(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(updateBrushPosition(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(hover(QPoint)));
     this->graphicsView->setDragMode(QGraphicsView::NoDrag);
-    this->connect(this->graphicsView,
-                  SIGNAL(mousePressed(QPointF)), this, SLOT(drawMask(QPointF)));
-    this->connect(this->graphicsView,
-                  SIGNAL(mouseMoved(QPointF)), this, SLOT(drawMask(QPointF)));
-    //Making brush
-/*
-    QImage* brush = this->generateBrushImage();
-    this->layerManager->updateBrush(QPoint(0, 0), brush);
-    delete brush;
+
 
     this->connect(this->graphicsView,
-                  SIGNAL(mouseMoved(QPointF)), this, SLOT(updateBrushPosition(QPointF)));
-*/
+                  SIGNAL(mousePressed(QPoint)), this, SLOT(drawMask(QPoint)));
+    this->connect(this->graphicsView,
+                  SIGNAL(mouseMovedWhileLeftMouseButtonPressed(QPoint)), this, SLOT(drawMask(QPoint)));
+    //Making brush
+
+    this->layerManager->updateBrush(QPoint(-1, -1), this->generateBrushImage(DRAW_MASK_BRUSH_COLOR));
+
+    this->connect(this->graphicsView,
+                  SIGNAL(mouseMoved(QPoint)), this, SLOT(updateBrushPosition(QPoint)));
+
 }
 
 void ImageProcessor::on_toolsDockWidget_eraseMask()
 {
-    this->graphicsView->disconnect(this);
+    //removing all shit
+    this->graphicsView->disconnect(this, SLOT(eraseMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(drawMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(pick(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(updateBrushPosition(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(hover(QPoint)));
     this->graphicsView->setDragMode(QGraphicsView::NoDrag);
-    this->connect(this->graphicsView,
-                  SIGNAL(mousePressed(QPointF)), this, SLOT(eraseMask(QPointF)));
-    this->connect(this->graphicsView,
-                  SIGNAL(mouseMoved(QPointF)), this, SLOT(eraseMask(QPointF)));
-/*    QImage* brush = this->generEraseateBrushImage();
-    this->layerManager->updateBrush(QPoint(0, 0), brush);
-    delete brush;
+
 
     this->connect(this->graphicsView,
-                  SIGNAL(mouseMoved(QPointF)), this, SLOT(updateBrushPosition(QPointF)));
-*/
+                  SIGNAL(mousePressed(QPoint)), this, SLOT(eraseMask(QPoint)));
+    this->connect(this->graphicsView,
+                  SIGNAL(mouseMovedWhileLeftMouseButtonPressed(QPoint)), this, SLOT(eraseMask(QPoint)));
+
+
+    this->layerManager->updateBrush(QPoint(-1, -1), this->generateBrushImage(ERASE_MASK_BRUSH_COLOR));
+    this->connect(this->graphicsView,
+                  SIGNAL(mouseMoved(QPoint)), this, SLOT(updateBrushPosition(QPoint)));
 }
 
 void ImageProcessor::on_toolsDockWidget_pickColor()
 {
-    this->graphicsView->disconnect(this);
+    //removing all shit
+    this->graphicsView->disconnect(this, SLOT(eraseMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(drawMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(pick(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(updateBrushPosition(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(hover(QPoint)));
     this->graphicsView->setDragMode(QGraphicsView::NoDrag);
+
+    connect(this->graphicsView, SIGNAL(mouseMovedWhileLeftMouseButtonNotPressed(QPoint)), this, SLOT(hover(QPoint)));
     this->connect(this->graphicsView,
-                  SIGNAL(mousePressed(QPointF)), this, SLOT(pick(QPointF)));
+                  SIGNAL(mousePressed(QPoint)), this, SLOT(pick(QPoint)));
 }
 
 
 void ImageProcessor::on_toolsDockWidget_move()
 {
-    this->graphicsView->disconnect(this);
+    //removing all shit
+    this->graphicsView->disconnect(this, SLOT(eraseMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(drawMask(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(pick(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(updateBrushPosition(QPoint)));
+    this->graphicsView->disconnect(this, SLOT(hover(QPoint)));
+    this->graphicsView->setDragMode(QGraphicsView::NoDrag);
+
+    connect(this->graphicsView, SIGNAL(mouseMovedWhileLeftMouseButtonNotPressed(QPoint)), this, SLOT(hover(QPoint)));
     this->graphicsView->setDragMode(QGraphicsView::ScrollHandDrag);
 }
 
@@ -464,6 +505,14 @@ void ImageProcessor::on_toolsDockWidget_completelyFillMask()
     this->processMaskChange();
 }
 
+void ImageProcessor::on_toolsDockWidget_maskBrushSizeChanged()
+{
+    if (toolsDockWidget->isDrawingMask())
+        this->layerManager->updateBrush(QPoint(-1, -1), this->generateBrushImage(DRAW_MASK_BRUSH_COLOR));
+    if (toolsDockWidget->isErasingMask())
+        this->layerManager->updateBrush(QPoint(-1, -1), this->generateBrushImage(ERASE_MASK_BRUSH_COLOR));
+}
+
 void ImageProcessor::on_toolsDockWidget_sizeRangeChanged()
 {
     this->processDataChange();
@@ -472,6 +521,55 @@ void ImageProcessor::on_toolsDockWidget_sizeRangeChanged()
 void ImageProcessor::on_toolsDockWidget_sizeRangeEnabledChanged()
 {
     this->processDataChange();
+}
+
+void ImageProcessor::on_graphicsView_mouseLeaved()
+{
+    qDebug() << "!!!!!!!!!!!!!!!!!LEAVED@@@@@@@@@@@@";
+    if ((toolsDockWidget->isDrawingMask()) || (toolsDockWidget->isErasingMask()))
+        layerManager->updateBrushVisibility(false);
+}
+
+void ImageProcessor::on_graphicsView_mouseEntered()
+{
+    if ((toolsDockWidget->isDrawingMask()) || (toolsDockWidget->isErasingMask()))
+        layerManager->updateBrushVisibility(true);
+}
+
+void ImageProcessor::hover(QPoint point)
+{
+    QPoint p;
+    p.setX(point.x());
+    p.setY(point.y());
+    if (!(this->property("lastPointHasInfo").isValid()) || this->property("lastPointHasInfo").toPoint() != p)
+    {
+        this->setProperty("lastPointHasInfo", QVariant(p));
+        if (this->property("areasPoints").isValid() && this->property("areasNumber").isValid())
+        {
+            OnePointInfo* areasPoints = (OnePointInfo*)(this->property("areasPoints").value<void*>());
+            int areasNumber = this->property("areasNumber").toInt();
+            int size = 0;
+            bool indexgot = false;
+            uint32_t index;
+            for (int i = 0; i < areasNumber; i++)
+            {
+                if ((p.x() == areasPoints[i].x) && (p.y() == areasPoints[i].y))
+                {
+                    index = areasPoints[i].areaIndex;
+                    indexgot = true;
+                    break;
+                }
+            }
+            if (indexgot)
+                for (int i = 0; i < areasNumber; i++)
+                {
+                    if (index == areasPoints[i].areaIndex)
+                        size++;
+                }
+            qDebug() << "Size is" << size;
+            emit notifyHoverItemSize(size);
+        }
+    }
 }
 
 
@@ -485,24 +583,22 @@ void ImageProcessor::disableResults()
 {
     this->resultsDockWidget->disableResults();
 }
-
-QImage *ImageProcessor::generateBrushImage()
+#include <vector>
+QGraphicsPixmapItem *ImageProcessor::generateBrushImage(QRgb color)
 {
     int radius = this->toolsDockWidget->maskBrushSize();
-    uchar * brushImageArray = new uchar[SQR(radius*2)];
+    int size = SQR(radius*2 + 1);
+    std::vector<uchar> brushImageArray(size, 0);
 
-    //Заполнение 0-ми. Медленно, костыльно, но работает и быстро реализовано. //TODO: переписать
-    for (int i = 0; i < SQR(radius*2); i++)
-        brushImageArray[i] = (uchar)(0);
+    this->drawCircleOnArray(brushImageArray.data(), radius, radius, radius*2 + 1, radius*2 +1, radius, (uchar)1);
 
-    this->drawCircleOnArray(brushImageArray, radius, radius, radius*2, radius*2, radius, (uchar)1);
+    QImage brushImage(brushImageArray.data(), radius*2 + 1, radius*2 + 1, radius*2 + 1, QImage::Format_Indexed8);
+    brushImage.setColor(0, (uint)0x00000000);
+    brushImage.setColor(1, (uint)color);
 
-    QImage *brushImage = new QImage(brushImageArray, radius*2, radius*2, radius*2, QImage::Format_Indexed8);
-    brushImage->setColor(0, (uint)0x00000000);
-    brushImage->setColor(1, (uint)0xEEFFFFFF);
+    QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(brushImage));
+    pixmapItem->setOffset(0-radius, 0-radius);
+    pixmapItem->setVisible(false);
 
-    //delete brushImageArray;
-
-    return brushImage;
-
+    return pixmapItem;
 }

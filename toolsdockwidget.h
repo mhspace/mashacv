@@ -34,6 +34,8 @@ public:
     void setMinSize(int value);
     bool isSizeRangeEnabled();
     void setSizeRangeEnabled(bool val);
+    bool isDrawingMask();
+    bool isErasingMask();
     
 signals:
     void move();
@@ -42,6 +44,7 @@ signals:
     void pickColor();
     void completelyEraseMask();
     void completelyFillMask();
+    void maskBrushSizeChanged();
     void minSizeChanged();
     void maxSizeChanged();
     void sizeRangeChanged();

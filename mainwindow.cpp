@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setAcceptDrops(true);
     this->isImageOpened = false;
     ui->mainToolBar->hide(); //пока не использую
-    ui->statusBar->hide(); //пока не использую
+    //уже использую  ui->statusBar->hide(); //пока не использую
 }
 
 MainWindow::~MainWindow()
@@ -52,8 +52,10 @@ void MainWindow::openImage(QString initFileName)
                 for (int i = 0; i < docks.count(); i++)
                     this->addDockWidget(Qt::LeftDockWidgetArea, docks.at(i));
                 ui->menuView->addMenu(this->createPopupMenu()); //TODO: переделать это
+                this->imageProcessor->setObjectName("imageProcessor");
             }
             this->isImageOpened = true;
+            QMetaObject::connectSlotsByName(this);
         }
     }
     this->setCursor(cursor);
@@ -70,6 +72,22 @@ void MainWindow::setRussianLanguage()
 
 void MainWindow::setEnglishLanguage()
 {
+}
+
+void MainWindow::on_imageProcessor_notifyHoverItemSize(int size)
+{
+    if (size == 0)
+    {
+        this->ui->statusBar->clearMessage();
+        QToolTip::hideText();
+    }
+    else
+    {
+        this->ui->statusBar->showMessage(QString::number(size));
+        QPoint cursorPos = QCursor::pos();
+        QPoint p = this->mapFromGlobal(cursorPos);
+        QToolTip::showText(cursorPos, QString::number(size), this, QRect(p, p));
+    }
 }
 
 void MainWindow::changeEvent(QEvent *e)

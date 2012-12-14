@@ -26,7 +26,8 @@ public:
     void updateDebugLayer(QImage *image);
     void updateDisabletItemsOverlayLayer(QImage *image);
     void updateBrushLayerPosition(QPoint point);
-    void updateBrush(QPoint point, QImage *image);
+    void updateBrush(QPoint point, QGraphicsPixmapItem *pixmapItem);
+    void updateBrushVisibility(bool visible);
     
 protected:
     void changeEvent(QEvent *e);

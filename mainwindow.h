@@ -5,6 +5,7 @@
 
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QToolTip>
 
 #include "imageprocessor.h"
 
@@ -24,6 +25,7 @@ public slots:
     void openImage(QString initFileName = "");
     void setRussianLanguage();
     void setEnglishLanguage();
+    void on_imageProcessor_notifyHoverItemSize(int size);
 
 protected:
     void changeEvent(QEvent *e);

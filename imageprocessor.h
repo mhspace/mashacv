@@ -41,18 +41,19 @@ public:
     QWidget *getMainWidget();
     
 signals:
+    void notifyHoverItemSize(int size);
     
 public slots:
-    void pick(QPointF point);
+    void pick(QPoint point);
     void processDataChange();
     void processPreview();
     void processCalculate(int sum);
     void processMaskChange();
     void drawCircleOnMask(int x, int y, int radius, uchar value);
     void drawCircleOnArray(uchar *array, int x, int y, int width, int height, int radius, uchar value);
-    void drawMask(QPointF point);
-    void eraseMask(QPointF point);
-    void updateBrushPosition(QPointF point);
+    void drawMask(QPoint point);
+    void eraseMask(QPoint point);
+    void updateBrushPosition(QPoint point);
     void updateDisabledItemsOverlay(OnePointInfo* areasPoints, int size, QVector<int> sizes);
     void on_toolsDockWidget_drawMask();
     void on_toolsDockWidget_eraseMask();
@@ -60,8 +61,13 @@ public slots:
     void on_toolsDockWidget_move();
     void on_toolsDockWidget_completelyEraseMask();
     void on_toolsDockWidget_completelyFillMask();
+    void on_toolsDockWidget_maskBrushSizeChanged();
     void on_toolsDockWidget_sizeRangeChanged();
     void on_toolsDockWidget_sizeRangeEnabledChanged();
+    void on_graphicsView_mouseLeaved();
+    void on_graphicsView_mouseEntered();
+    void hover(QPoint point);
+
 
 private:
     QImage *image;
@@ -82,7 +88,7 @@ private:
     void hideFilteredResults();
     void disableResults();
     QPointF lastPoint;
-    QImage *generateBrushImage();
+    QGraphicsPixmapItem *generateBrushImage(QRgb color);
 };
 
 #endif // IMAGEPROCESSOR_H

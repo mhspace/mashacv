@@ -19,6 +19,8 @@ public:
     ~GraphicsView();
 
     //from QGraphicsView
+    void setSceneRect ( const QRectF & rect );
+    void setSceneRect ( qreal x, qreal y, qreal w, qreal h );
     void setTransform ( const QTransform & matrix, bool combine = false );
     void setScene ( QGraphicsScene * scene );
     void fitInView ( const QRectF & rect, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio );
@@ -30,8 +32,12 @@ public:
 
 signals:
     //from QGraphicsViewExtended
-    void mousePressed(QPointF point);
-    void mouseMoved(QPointF point);
+    void mousePressed(QPoint point);
+    void mouseMoved(QPoint point);
+    void mouseMovedWhileLeftMouseButtonPressed(QPoint point);
+    void mouseMovedWhileLeftMouseButtonNotPressed(QPoint point);
+    void mouseEntered();
+    void mouseLeaved();
     //endof from QGraphicsViewExtended
     
 protected:
@@ -43,8 +49,12 @@ private slots:
     void on_oneToOneZoomButton_clicked();
 
     //for QGraphicsViewExtended
-    void on_graphicsView_mousePressed(QPointF point);
-    void on_graphicsView_mouseMoved(QPointF point);
+    void on_graphicsView_mousePressed(QPoint point);
+    void on_graphicsView_mouseMoved(QPoint point);
+    void on_graphicsView_mouseMovedWhileLeftMouseButtonPressed(QPoint point);
+    void on_graphicsView_mouseMovedWhileLeftMouseButtonNotPressed(QPoint point);
+    void on_graphicsView_mouseEntered();
+    void on_graphicsView_mouseLeaved();
     //endof for QGraphicsViewExtended
 
     void on_zoomToFitButton_clicked();

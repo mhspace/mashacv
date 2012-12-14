@@ -7,8 +7,8 @@ LayerDockWidget::LayerDockWidget(QGraphicsScene *scene, QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::LayerDockWidget)
 {
-    this->layers = new QVector<QGraphicsItem*>(5);
-    this->isLayerExsists = new QVector<bool>(5, false);
+    this->layers = new QVector<QGraphicsItem*>(11);
+    this->isLayerExsists = new QVector<bool>(11, false);
     ui->setupUi(this);
     this->scene = scene;
     this->listModel = new LayerListModel();
@@ -22,7 +22,17 @@ LayerDockWidget::~LayerDockWidget()
 
 void LayerDockWidget::updateLayer(int n, QGraphicsItem *layer)
 {
-
+    if (this->isLayerExsists->at(n))
+    {
+        this->scene->removeItem(this->layers->at(n));
+        this->layers->at(n)->~QGraphicsItem();
+    }
+    this->scene->addItem(layer);
+    this->layers->replace(n, layer);
+    this->layers->at(n)->setZValue(n);
+    ((QGraphicsPixmapItem*)(this->layers->at(n)))->setAcceptedMouseButtons(Qt::NoButton);
+    ((QGraphicsPixmapItem*)(this->layers->at(n)))->setFlags(0);
+    this->isLayerExsists->replace(n, true);
 }
 
 void LayerDockWidget::updateLayer(int n, QImage *image)
@@ -66,13 +76,19 @@ void LayerDockWidget::updateDisabletItemsOverlayLayer(QImage *image)
 
 void LayerDockWidget::updateBrushLayerPosition(QPoint point)
 {
-    int radius = (int)(((QGraphicsPixmapItem*)(this->layers->at(10)))->boundingRect().height()/2);
-    ((QGraphicsPixmapItem*)(this->layers->at(10)))->setPos(point.x() - radius, point.y() - radius);
+    QGraphicsPixmapItem* image = ((QGraphicsPixmapItem*)(this->layers->at(10)));
+    image->setPos(point);
 }
 
-void LayerDockWidget::updateBrush(QPoint point, QImage *image)
+void LayerDockWidget::updateBrush(QPoint point, QGraphicsPixmapItem *pixmapItem)
 {
-    this->updateLayer(10, image);
+    this->updateLayer(10, pixmapItem);
+}
+
+void LayerDockWidget::updateBrushVisibility(bool visible)
+{
+    QGraphicsPixmapItem* image = ((QGraphicsPixmapItem*)(this->layers->at(10)));
+    image->setVisible(visible);
 }
 
 void LayerDockWidget::changeEvent(QEvent *e)

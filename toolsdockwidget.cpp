@@ -61,6 +61,16 @@ void ToolsDockWidget::setSizeRangeEnabled(bool val)
     ui->groupBox_2->setChecked(val);
 }
 
+bool ToolsDockWidget::isDrawingMask()
+{
+    return ui->drawMaskRadioButton->isChecked();
+}
+
+bool ToolsDockWidget::isErasingMask()
+{
+    return ui->eraseMaskRadioButton->isChecked();
+}
+
 void ToolsDockWidget::changeEvent(QEvent *e)
 {
     QDockWidget::changeEvent(e);
@@ -102,6 +112,7 @@ void ToolsDockWidget::on_maskBrushSizeSlider_valueChanged(int value)
 void ToolsDockWidget::on_maskBrushSizeSpinBox_valueChanged(int arg1)
 {
     this->ui->maskBrushSizeSlider->setValue(arg1);
+    emit maskBrushSizeChanged();
 }
 
 void ToolsDockWidget::on_completelyEraseMaskButton_clicked()

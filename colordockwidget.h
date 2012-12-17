@@ -2,6 +2,8 @@
 #define COLORDOCKWIDGET_H
 
 #include <QDockWidget>
+#include <QMenu>
+#include <QVariant>
 #include <QColor>
 #include <QRgb>
 #include <QColorDialog>
@@ -21,6 +23,9 @@ public:
     QColor *getColor();
     double getDelta();
     QRgb rgb();
+    int method();
+    float lowerLimit(int i);
+    float upperLimit(int i);
 
 protected:
     void changeEvent(QEvent *e);
@@ -31,6 +36,8 @@ private slots:
     void on_thresholdDoubleSpinBox_valueChanged(double arg1);
 
     void on_thresholdSlider_valueChanged(int value);
+    void on_methodBox_currentIndexChanged(int index);
+
 private:
     Ui::ColorDockWidget *ui;
     QColor *colorPrivate;

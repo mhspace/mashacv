@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>211</width>
-    <height>222</height>
+    <width>227</width>
+    <height>215</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -20,63 +20,142 @@
    <string>Color</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout">
     <item>
-     <widget class="QGroupBox" name="colorGroupBox">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="title">
-       <string>Base Color</string>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QPushButton" name="colorButton">
-         <property name="text">
-          <string notr="true"/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
+     <widget class="QComboBox" name="methodBox"/>
     </item>
     <item>
-     <widget class="QGroupBox" name="thresholdGroupBox">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <property name="currentIndex">
+       <number>1</number>
       </property>
-      <property name="title">
-       <string>Threshold</string>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <property name="topMargin">
-        <number>0</number>
+      <widget class="QWidget" name="color_colorDelta">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <item>
-        <widget class="QDoubleSpinBox" name="thresholdDoubleSpinBox"/>
-       </item>
-       <item>
-        <widget class="QSlider" name="thresholdSlider">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-      </layout>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QGroupBox" name="colorGroupBox">
+          <property name="title">
+           <string>Base Color</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="colorButton">
+             <property name="text">
+              <string notr="true"/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="thresholdGroupBox">
+          <property name="title">
+           <string>Threshold</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QDoubleSpinBox" name="thresholdDoubleSpinBox"/>
+           </item>
+           <item>
+            <widget class="QSlider" name="thresholdSlider">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="colorModel_channelRanges">
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="margin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="RangeControl" name="colorModel_channelRanges_firstChannel" native="true">
+          <property name="maximum" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="value" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="sliderPosition" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="invertedAppearance" stdset="0">
+           <bool>false</bool>
+          </property>
+          <property name="invertedControls" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="RangeControl" name="colorModel_channelRanges_secondChannel" native="true">
+          <property name="maximum" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="value" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="sliderPosition" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="invertedAppearance" stdset="0">
+           <bool>false</bool>
+          </property>
+          <property name="invertedControls" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="RangeControl" name="colorModel_channelRanges_thirdChannel" native="true">
+          <property name="maximum" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="value" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="sliderPosition" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="invertedAppearance" stdset="0">
+           <bool>false</bool>
+          </property>
+          <property name="invertedControls" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RangeControl</class>
+   <extends>QWidget</extends>
+   <header>rangecontrol.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

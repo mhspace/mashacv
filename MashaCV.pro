@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     layerdockwidget.cpp \
     layerlistmodel.cpp \
     resultsdockwidget.cpp \
-    toolsdockwidget.cpp
+    toolsdockwidget.cpp \
+    rangecontrol.cpp
 
 HEADERS  += mainwindow.h \
     graphicsview.h \
@@ -35,14 +36,16 @@ HEADERS  += mainwindow.h \
     layerdockwidget.h \
     layerlistmodel.h \
     resultsdockwidget.h \
-    toolsdockwidget.h
+    toolsdockwidget.h \
+    rangecontrol.h
 
 FORMS    += mainwindow.ui \
     graphicsview.ui \
     colordockwidget.ui \
     layerdockwidget.ui \
     resultsdockwidget.ui \
-    toolsdockwidget.ui
+    toolsdockwidget.ui \
+    rangecontrol.ui
 
 RESOURCES += \
     Resources.qrc

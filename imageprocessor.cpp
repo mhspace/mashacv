@@ -9,6 +9,8 @@
 #define FILTERED_COLOR 0xAA444444
 
 #define SQR(s)  ((s) * (s))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
     QObject(parent)
@@ -18,6 +20,62 @@ ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
     this->imageMatchedPixels = new uchar[this->imageNumberOfPixels];
     this->imageMaskLayer = new uchar[this->imageNumberOfPixels];
     this->imageDisabledItemsOverlay = new uchar[this->imageNumberOfPixels];
+    this->H = new float[this->imageNumberOfPixels];
+    this->S = new float[this->imageNumberOfPixels];
+    this->V = new float[this->imageNumberOfPixels];
+    //converting to HSV
+
+    {
+        QTime starttime = QTime::currentTime();
+        const uchar * rawData = image->bits();
+
+        QRgb*  source = (QRgb*)rawData;
+
+        const int pixels = this->imageNumberOfPixels;
+
+        for (int i = 0; i < pixels; i++)
+        {
+            float R = (qRed(source[i])*1.0)/255;
+            float G = (qGreen(source[i])*1.0)/255;
+            float B = (qBlue(source[i])*1.0)/255;
+
+            float Max = MAX(R, MAX(G, B));
+            float Min = MIN(R, MIN(G, B));
+
+            //getting H
+            if (Max == Min)
+            {
+                H[i] = 0;
+            }
+            else if (Max == R && G >= B)
+            {
+                H[i] = (60*( (G - B)/(Max - Min) )) + 0;
+            }
+            else if (Max == R && G < B)
+            {
+                H[i] = (60*( (G - B)/(Max - Min) )) + 360;
+            }
+            else if (Max == G)
+            {
+                H[i] = (60*( (B - R)/(Max - Min) )) + 120;
+            }
+            else if (Max == B)
+            {
+                H[i] = (60*( (R - G)/(Max - Min) )) + 240;
+            }
+            //getting S
+            if (Max == 0)
+            {
+                S[i] = 0;
+            }
+            else
+            {
+                S[i] = Min/Max;
+            }
+            V[i] = Max;
+        }
+        qDebug() << "HSV" << starttime.msecsTo(QTime::currentTime());
+    }
     this->graphicsView = new GraphicsView();
     this->graphicsView->setObjectName("graphicsView");
     this->graphicsView->QObject::setParent(this);
@@ -102,38 +160,46 @@ void ImageProcessor::processDataChange()
 #define CIE76_RGB(x, y) sqrt(SQR(RED(x)-RED(y))+SQR(GREEN(x)-GREEN(y))+SQR(BLUE(x)-BLUE(y)))
 void ImageProcessor::processPreview()
 {
-
-    int size = 0;
-    QRgb  baseColor = this->colorDockWidget->rgb();
-    double maxDelta = this->colorDockWidget->getDelta();
-
     QTime starttime = QTime::currentTime();
+    int size = 0;
+
     QImage *image = this->image;
-
     const uchar * rawData = image->bits();
-
     QRgb*  source = (QRgb*)rawData;
-
     uchar *  mask = this->imageMaskLayer;
     uchar *  matched = this->imageMatchedPixels;
-
     const int pixels = this->imageNumberOfPixels;
+
+    if (colorDockWidget->method() == 0)
+    {
+    QRgb  baseColor = this->colorDockWidget->rgb();
+    double maxDelta = this->colorDockWidget->getDelta();
 
     for (int i = 0; i < pixels; i++)
     {
         size += matched[i] = (uchar)((mask[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta));
-        //if ((bool)matched[i])
-        //    size++;
+    }
 
+    }
+    else if (colorDockWidget->method() == 1)
+    {
+        float Hmin = colorDockWidget->lowerLimit(0);
+        float Hmax = colorDockWidget->upperLimit(0);
+        float Smin = colorDockWidget->lowerLimit(1);
+        float Smax = colorDockWidget->upperLimit(1);
+        float Vmin = colorDockWidget->lowerLimit(2);
+        float Vmax = colorDockWidget->upperLimit(2);
 
-        /*
-        if ((mask[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta)) //TODO: Проверить корректность значений из макроса
+        if (Hmin <= Hmax)
         {
-            matched[i] = (uchar)1;
-            size++;
+            for (int i = 0; i < pixels; i++)
+            size += matched[i] = (uchar)((mask[i] == 0) && (H[i] >= Hmin) && (H[i] <= Hmax) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
         }
         else
-            matched[i] = (uchar)0;*/
+        {
+            for (int i = 0; i < pixels; i++)
+            size += matched[i] = (uchar)((mask[i] == 0) && ((H[i] >= Hmin) || (H[i] <= Hmax)) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
+        }
     }
 
     QImage *qImageMatchedPixels = new QImage(imageMatchedPixels, image->width(), image->height(), image->width(), QImage::Format_Indexed8);

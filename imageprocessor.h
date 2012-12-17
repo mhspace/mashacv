@@ -75,6 +75,9 @@ private:
     uchar* imageMatchedPixels;
     uchar* imageMaskLayer;
     uchar* imageDisabledItemsOverlay;
+    float* H;
+    float* S;
+    float* V;
     GraphicsView *graphicsView; //Ui
     ColorDockWidget *colorDockWidget; //Ui
     LayerDockWidget *layerManager; //Ui

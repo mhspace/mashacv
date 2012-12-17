@@ -12,6 +12,23 @@ ColorDockWidget::ColorDockWidget(QWidget *parent) :
     this->colorPrivate = new QColor(Qt::black);
     this->setColor(*(this->colorPrivate));
 
+    ui->methodBox->addItem(tr("Base Color and Delta E"), QVariant((ui->stackedWidget->indexOf((ui->color_colorDelta)))));
+    ui->methodBox->addItem(tr("Color channels ranges"), QVariant((ui->stackedWidget->indexOf((ui->colorModel_channelRanges)))));
+
+    ui->colorModel_channelRanges_firstChannel->setLabel("H");
+    ui->colorModel_channelRanges_firstChannel->setAllowOverlap(true);
+    ui->colorModel_channelRanges_firstChannel->setMax(360);
+    //ui->colorModel_channelRanges_firstChannel->setBackground();
+    ui->colorModel_channelRanges_secondChannel->setLabel("S");
+    ui->colorModel_channelRanges_secondChannel->setMax(1);
+    ui->colorModel_channelRanges_thirdChannel->setLabel("V");
+    ui->colorModel_channelRanges_thirdChannel->setMax(1);
+
+    connect(ui->colorModel_channelRanges_firstChannel, SIGNAL(rangeChanged()), this, SIGNAL(colorOrDeltaChanged()));
+    connect(ui->colorModel_channelRanges_secondChannel, SIGNAL(rangeChanged()), this, SIGNAL(colorOrDeltaChanged()));
+    connect(ui->colorModel_channelRanges_thirdChannel, SIGNAL(rangeChanged()), this, SIGNAL(colorOrDeltaChanged()));
+
+
     ui->thresholdDoubleSpinBox->setMinimum(0);
     ui->thresholdDoubleSpinBox->setMaximum(CIEDE2000_MAX);
     ui->thresholdSlider->setMinimum(0);
@@ -61,6 +78,35 @@ QRgb ColorDockWidget::rgb()
     return this->colorPrivate->rgb();
 }
 
+int ColorDockWidget::method()
+{
+    return ui->stackedWidget->currentIndex();
+}
+
+float ColorDockWidget::lowerLimit(int i)
+{
+    if (i == 0)
+        return ui->colorModel_channelRanges_firstChannel->lowerRangeLimit();
+    else if (i == 1) {
+        return ui->colorModel_channelRanges_secondChannel->lowerRangeLimit();
+    }
+    else if (i == 2) {
+        return ui->colorModel_channelRanges_thirdChannel->lowerRangeLimit();
+    }
+}
+
+float ColorDockWidget::upperLimit(int i)
+{
+    if (i == 0)
+        return ui->colorModel_channelRanges_firstChannel->upperRangeLimit();
+    else if (i == 1) {
+        return ui->colorModel_channelRanges_secondChannel->upperRangeLimit();
+    }
+    else if (i == 2) {
+        return ui->colorModel_channelRanges_thirdChannel->upperRangeLimit();
+    }
+}
+
 
 
 void ColorDockWidget::changeEvent(QEvent *e)
@@ -97,5 +143,11 @@ void ColorDockWidget::deltaEChange(double deltaE)
     ui->thresholdDoubleSpinBox->setValue(deltaE);
     ui->thresholdSlider->setValue((int)(deltaE*CIEDE2000_TOINTmult));
 
+    emit colorOrDeltaChanged();
+}
+
+void ColorDockWidget::on_methodBox_currentIndexChanged(int index)
+{
+    ui->stackedWidget->setCurrentIndex(ui->methodBox->itemData(index).toInt());
     emit colorOrDeltaChanged();
 }

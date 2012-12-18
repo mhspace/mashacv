@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->isImageOpened = false;
     ui->mainToolBar->hide(); //пока не использую
     //уже использую  ui->statusBar->hide(); //пока не использую
+    this->setWindowIcon(QIcon(":/icons/icon.png"));
 }
 
 MainWindow::~MainWindow()

@@ -11,6 +11,7 @@ RangeControl::RangeControl(QWidget *parent) :
     this->allowOverlap = false;
     ui->label->setText("asdf");//label;
     isDraggingSlider = false;
+    isBackgroundSet = false;
     setSingleStep(1.0/100);
 }
 
@@ -86,9 +87,17 @@ void RangeControl::setAllowOverlap(bool allowOverlap)
     this->repaint();
 }
 
+void RangeControl::setBackground(QPixmap pixmap)
+{
+    //ui->previewLabel->setPixmap(pixmap);
+    //ui->previewLabel->setScaledContents(true);
+    this->repaint();
+}
+
 void RangeControl::setBackground(QBrush brush)
 {
-
+    this->backgroundBrush = brush;
+    this->isBackgroundSet = true;
     this->repaint();
 }
 
@@ -109,14 +118,33 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
     QPainter painter(this);
 
     double xMult = ui->previewLabel->width()/max();
-    painter.setBrush(qApp->palette().background());
+    if (isBackgroundSet)
+        painter.setBrush(backgroundBrush);
+    else
+        painter.setBrush(qApp->palette().background());
     painter.drawRect(ui->previewLabel->x(), ui->upperRangeLimit->y(), ui->previewLabel->width(), ui->upperRangeLimit->height());
+
+    QBrush paintBrush;
+    if (isBackgroundSet)
+    {
+        QLinearGradient selGradient(0, 0, 0, 1);
+        QColor selColor = qApp->palette().highlight().color();
+        selGradient.setCoordinateMode(QGradient::ObjectBoundingMode);
+        selGradient.setColorAt(0, selColor);
+        selGradient.setColorAt(0.2, selColor);
+        selGradient.setColorAt(0.5, QColor (0, 0, 0, 0));
+        selGradient.setColorAt(0.8, selColor);
+        selGradient.setColorAt(1, selColor);
+        paintBrush = QBrush(selGradient);
+    }
+    else
+        paintBrush = qApp->palette().highlight();
 
     if (lowerRangeLimit() > upperRangeLimit())
     {
         if (allowOverlap)
         {
-            painter.setBrush(qApp->palette().highlight());
+            painter.setBrush(paintBrush);
 
             painter.drawRect(ui->previewLabel->x(), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult , ui->lowerRangeLimit->height());
             painter.drawRect(ui->previewLabel->x() + lowerRangeLimit()*xMult, ui->lowerRangeLimit->y(), ui->previewLabel->width() - lowerRangeLimit()*xMult, ui->lowerRangeLimit->height());
@@ -129,7 +157,7 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
     }
     else
     {
-        painter.setBrush(qApp->palette().highlight());
+        painter.setBrush(paintBrush);
         painter.drawRect(ui->previewLabel->x() + (lowerRangeLimit()*xMult), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult - (lowerRangeLimit()*xMult), ui->lowerRangeLimit->height());
     }
 

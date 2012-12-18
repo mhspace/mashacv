@@ -2,4 +2,7 @@
     <qresource prefix="/languages">
         <file>ru.qm</file>
     </qresource>
+    <qresource prefix="/icons">
+        <file>icon.png</file>
+    </qresource>
 </RCC>

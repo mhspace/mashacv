@@ -19,7 +19,16 @@ ColorDockWidget::ColorDockWidget(QWidget *parent) :
     ui->colorModel_channelRanges_firstChannel->setAllowOverlap(true);
     ui->colorModel_channelRanges_firstChannel->setMax(360);
     ui->colorModel_channelRanges_firstChannel->setSingleStep(0.1);
-    //ui->colorModel_channelRanges_firstChannel->setBackground();
+    QLinearGradient hueGradient(0, 0, 1, 0);
+    hueGradient.setCoordinateMode(QGradient::ObjectBoundingMode);
+    hueGradient.setColorAt(  0.0/360, Qt::red);
+    hueGradient.setColorAt( 60.0/360, Qt::yellow);
+    hueGradient.setColorAt(120.0/360, Qt::green);
+    hueGradient.setColorAt(180.0/360, Qt::cyan);
+    hueGradient.setColorAt(240.0/360, Qt::blue);
+    hueGradient.setColorAt(300.0/360, Qt::magenta);
+    hueGradient.setColorAt(360.0/360, Qt::red);
+    ui->colorModel_channelRanges_firstChannel->setBackground(QBrush(hueGradient));
     ui->colorModel_channelRanges_secondChannel->setLabel("S");
     ui->colorModel_channelRanges_secondChannel->setMax(1);
     ui->colorModel_channelRanges_secondChannel->setSingleStep(0.001);

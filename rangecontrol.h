@@ -27,6 +27,7 @@ public:
     double max();
     void setLabel(QString label);
     void setAllowOverlap(bool allowOverlap);
+    void setBackground(QPixmap pixmap);
     void setBackground(QBrush brush);
     
 signals:
@@ -51,6 +52,7 @@ private:
     double lastXpos;
     slider draggingSlider;
     QBrush backgroundBrush;
+    bool isBackgroundSet;
 };
 
 #endif // RANGECONTROL_H

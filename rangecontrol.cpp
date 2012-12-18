@@ -10,6 +10,8 @@ RangeControl::RangeControl(QWidget *parent) :
     this->setMax(255);
     this->allowOverlap = false;
     ui->label->setText("asdf");//label;
+    isDraggingSlider = false;
+    setSingleStep(1.0/100);
 }
 
 
@@ -29,6 +31,16 @@ double RangeControl::upperRangeLimit()
     return ui->upperRangeLimit->value();
 }
 
+void RangeControl::setLowerRangeLimit(double val)
+{
+    ui->lowerRangeLimit->setValue(val);
+}
+
+void RangeControl::setUpperRangeLimit(double val)
+{
+    ui->upperRangeLimit->setValue(val);
+}
+
 void RangeControl::setMax(double max)
 {
     ui->upperRangeLimit->setMaximum(max);
@@ -40,6 +52,13 @@ void RangeControl::setMin(double min)
 {
     ui->upperRangeLimit->setMinimum(min);
     ui->lowerRangeLimit->setMinimum(min);
+    this->repaint();
+}
+
+void RangeControl::setSingleStep(double step)
+{
+    ui->lowerRangeLimit->setSingleStep(step);
+    ui->upperRangeLimit->setSingleStep(step);
     this->repaint();
 }
 
@@ -62,6 +81,8 @@ void RangeControl::setLabel(QString label)
 void RangeControl::setAllowOverlap(bool allowOverlap)
 {
     this->allowOverlap = allowOverlap;
+    ui->lowerRangeLimit->setWrapping(allowOverlap);
+    ui->upperRangeLimit->setWrapping(allowOverlap);
     this->repaint();
 }
 
@@ -115,6 +136,22 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
 
 
 }
+#include <QMouseEvent>
+void RangeControl::mouseMoveEvent(QMouseEvent *event)
+{
+    double xMult = max()/ui->previewLabel->width();
+    if (draggingSlider == RangeControl::lowerRangeLimitSlider)
+    {
+        this->setLowerRangeLimit( (this->lowerRangeLimit() + (event->posF().x() - lastXpos)*xMult));
+        qDebug() << (this->lowerRangeLimit() + (event->posF().x() - lastXpos)*xMult);
+    }
+    else
+    {
+        this->setUpperRangeLimit( (this->upperRangeLimit() + (event->posF().x() - lastXpos)*xMult));
+        qDebug() << (this->upperRangeLimit() + (event->posF().x() - lastXpos)*xMult);
+    }
+    lastXpos = event->posF().x();
+}
 
 void RangeControl::on_lowerRangeLimit_valueChanged(double arg1)
 {
@@ -126,4 +163,31 @@ void RangeControl::on_upperRangeLimit_valueChanged(double arg1)
 {
     emit rangeChanged();
     this->repaint();
+}
+
+void RangeControl::mousePressEvent(QMouseEvent *event)
+{
+    if (ui->previewLabel->geometry().contains(event->pos()) && event->buttons() == Qt::LeftButton)
+    {
+        isDraggingSlider = true;
+        QPointF pos = event->posF();
+        double xMult = ui->previewLabel->width()*1.0/max();
+        lastXpos = pos.x();
+        if (abs((ui->previewLabel->x() + (lowerRangeLimit()*xMult)) - pos.x()) > abs((ui->previewLabel->x() + (upperRangeLimit()*xMult)) - pos.x()))
+        //moving upperslider
+        {
+            qDebug() << "upper";
+            draggingSlider = RangeControl::upperRangeLimitSlider;
+        }
+        else
+        {
+            qDebug() << "lower";
+            draggingSlider = RangeControl::lowerRangeLimitSlider;
+        }
+    }
+}
+
+void RangeControl::mouseReleaseEvent(QMouseEvent *event)
+{
+    isDraggingSlider = false;
 }

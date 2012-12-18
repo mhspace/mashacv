@@ -70,22 +70,22 @@ public slots:
 
 
 private:
-    QImage *image;
+    QImage sourceImage;
     unsigned int imageNumberOfPixels;
-    uchar* imageMatchedPixels;
-    uchar* imageMaskLayer;
-    uchar* imageDisabledItemsOverlay;
-    float* H;
-    float* S;
-    float* V;
+    QVector<uchar> imageMatchedPixels;
+    QVector<uchar> imageMaskLayer;
+    QVector<uchar> imageDisabledItemsOverlay;
+    QVector<float> H;
+    QVector<float> S;
+    QVector<float> V;
     GraphicsView *graphicsView; //Ui
     ColorDockWidget *colorDockWidget; //Ui
     LayerDockWidget *layerManager; //Ui
     ResultsDockWidget *resultsDockWidget; //Ui
     ToolsDockWidget *toolsDockWidget;
-    QGraphicsScene *graphicsScene;
-    QTimer *previewTimer;
-    QTimer *calculateTimer;
+    QGraphicsScene graphicsScene;
+    QTimer previewTimer;
+    QTimer calculateTimer;
     void showResults(QVector<int> sizes);
     void showFilteredResults(QVector<int> sizes);
     void hideFilteredResults();

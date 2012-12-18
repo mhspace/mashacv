@@ -18,11 +18,14 @@ ColorDockWidget::ColorDockWidget(QWidget *parent) :
     ui->colorModel_channelRanges_firstChannel->setLabel("H");
     ui->colorModel_channelRanges_firstChannel->setAllowOverlap(true);
     ui->colorModel_channelRanges_firstChannel->setMax(360);
+    ui->colorModel_channelRanges_firstChannel->setSingleStep(0.1);
     //ui->colorModel_channelRanges_firstChannel->setBackground();
     ui->colorModel_channelRanges_secondChannel->setLabel("S");
     ui->colorModel_channelRanges_secondChannel->setMax(1);
+    ui->colorModel_channelRanges_secondChannel->setSingleStep(0.001);
     ui->colorModel_channelRanges_thirdChannel->setLabel("V");
     ui->colorModel_channelRanges_thirdChannel->setMax(1);
+    ui->colorModel_channelRanges_thirdChannel->setSingleStep(0.001);
 
     connect(ui->colorModel_channelRanges_firstChannel, SIGNAL(rangeChanged()), this, SIGNAL(colorOrDeltaChanged()));
     connect(ui->colorModel_channelRanges_secondChannel, SIGNAL(rangeChanged()), this, SIGNAL(colorOrDeltaChanged()));
@@ -107,6 +110,30 @@ float ColorDockWidget::upperLimit(int i)
     }
 }
 
+void ColorDockWidget::setLowerLimit(int i, float limit)
+{
+    if (i == 0)
+        ui->colorModel_channelRanges_firstChannel->setLowerRangeLimit(limit);
+    else if (i == 1) {
+        ui->colorModel_channelRanges_secondChannel->setLowerRangeLimit(limit);
+    }
+    else if (i == 2) {
+        ui->colorModel_channelRanges_thirdChannel->setLowerRangeLimit(limit);
+    }
+}
+
+void ColorDockWidget::setUpperLimit(int i, float limit)
+{
+    if (i == 0)
+        ui->colorModel_channelRanges_firstChannel->setUpperRangeLimit(limit);
+    else if (i == 1) {
+        ui->colorModel_channelRanges_secondChannel->setUpperRangeLimit(limit);
+    }
+    else if (i == 2) {
+        ui->colorModel_channelRanges_thirdChannel->setUpperRangeLimit(limit);
+    }
+}
+
 
 
 void ColorDockWidget::changeEvent(QEvent *e)
@@ -150,4 +177,13 @@ void ColorDockWidget::on_methodBox_currentIndexChanged(int index)
 {
     ui->stackedWidget->setCurrentIndex(ui->methodBox->itemData(index).toInt());
     emit colorOrDeltaChanged();
+    if (index == 0)
+    {
+        ui->colorModel_channelRanges->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        ui->color_colorDelta->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    }
+    else if (index == 1) {
+        ui->color_colorDelta->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        ui->colorModel_channelRanges->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    }
 }

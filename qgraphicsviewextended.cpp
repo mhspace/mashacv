@@ -1,13 +1,11 @@
 #include "qgraphicsviewextended.h"
 #include <QMouseEvent>
 
-
 QGraphicsViewExtended::QGraphicsViewExtended(QWidget *parent) :
     QGraphicsView(parent)
 {
     this->setMouseTracking(true);
     this->isMousePressed = false;
-
 }
 
 

@@ -15,25 +15,23 @@
 ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
     QObject(parent)
 {
-    this->image = new QImage(fileName);
-    this->imageNumberOfPixels = this->image->width()*this->image->height();
-    this->imageMatchedPixels = new uchar[this->imageNumberOfPixels];
-    this->imageMaskLayer = new uchar[this->imageNumberOfPixels];
-    this->imageDisabledItemsOverlay = new uchar[this->imageNumberOfPixels];
-    this->H = new float[this->imageNumberOfPixels];
-    this->S = new float[this->imageNumberOfPixels];
-    this->V = new float[this->imageNumberOfPixels];
+    this->sourceImage.load(fileName);
+    this->imageNumberOfPixels = this->sourceImage.width()*this->sourceImage.height();
+    this->imageMatchedPixels.resize(imageNumberOfPixels);
+    this->imageMaskLayer.resize(imageNumberOfPixels);
+    this->imageDisabledItemsOverlay.resize(imageNumberOfPixels);
     //converting to HSV
-
+    this->H.resize(imageNumberOfPixels);
+    this->S.resize(imageNumberOfPixels);
+    this->V.resize(imageNumberOfPixels);
+    //converting to HSV
     {
         QTime starttime = QTime::currentTime();
-        const uchar * rawData = image->bits();
+        const uchar * rawData = sourceImage.bits();
 
-        QRgb*  source = (QRgb*)rawData;
+        QRgb* source = (QRgb*)rawData;
 
-        const int pixels = this->imageNumberOfPixels;
-
-        for (int i = 0; i < pixels; i++)
+        for (int i = 0; i < imageNumberOfPixels; i++)
         {
             float R = (qRed(source[i])*1.0)/255;
             float G = (qGreen(source[i])*1.0)/255;
@@ -72,30 +70,29 @@ ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
             {
                 S[i] = Min/Max;
             }
+            //getting V
             V[i] = Max;
         }
         qDebug() << "HSV" << starttime.msecsTo(QTime::currentTime());
     }
     this->graphicsView = new GraphicsView();
-    this->graphicsView->setObjectName("graphicsView");
-    this->graphicsView->QObject::setParent(this);
-    this->graphicsView->setSceneRect(0, 0, this->image->width(), this->image->height());
-    connect(this->graphicsView, SIGNAL(mouseMovedWhileLeftMouseButtonNotPressed(QPoint)), this, SLOT(hover(QPoint)));
-    this->graphicsScene = new QGraphicsScene();
+    this->graphicsView->setScene(&graphicsScene);
+    this->graphicsView->setSceneRect(0, 0, this->sourceImage.width(), this->sourceImage.height());
+    connect(graphicsView, SIGNAL(mouseMovedWhileLeftMouseButtonNotPressed(QPoint)), this, SLOT(hover(QPoint)));
+    connect(graphicsView, SIGNAL(mouseEntered()), this, SLOT(on_graphicsView_mouseEntered()));
+    connect(graphicsView, SIGNAL(mouseLeaved()), this, SLOT(on_graphicsView_mouseLeaved()));
     this->colorDockWidget = new ColorDockWidget();
-    this->layerManager = new LayerDockWidget(this->graphicsScene);
+    this->layerManager = new LayerDockWidget(&graphicsScene);
     this->resultsDockWidget = new ResultsDockWidget();
-    this->toolsDockWidget = new ToolsDockWidget(this->imageNumberOfPixels, (this->image->width() > this->image->height()) ? (this->image->width()) : (this->image->height()));
+    this->toolsDockWidget = new ToolsDockWidget(this->imageNumberOfPixels, (this->sourceImage.width() > this->sourceImage.height()) ? (this->sourceImage.width()) : (this->sourceImage.height()));
     this->toolsDockWidget->setObjectName("toolsDockWidget");
     this->toolsDockWidget->QObject::setParent(this);
-    this->layerManager->updateBaseImage(this->image);
-    this->previewTimer = new QTimer();
-    this->calculateTimer = new QTimer();
-    this->previewTimer->setSingleShot(true);
-    this->calculateTimer->setSingleShot(true);
-    this->connect(this->previewTimer, SIGNAL(timeout()), this, SLOT(processPreview()));
-    this->connect(this->calculateTimer, SIGNAL(timeout()), this, SLOT(processCalculate()));
-    this->graphicsView->setScene(this->graphicsScene);
+    this->layerManager->updateBaseImage(&sourceImage);
+    this->previewTimer.setSingleShot(true);
+    this->calculateTimer.setSingleShot(true);
+    this->connect(&previewTimer, SIGNAL(timeout()), this, SLOT(processPreview()));
+    //this->connect(&calculateTimer, SIGNAL(timeout()), this, SLOT(processCalculate()));
+
     this->connect(this->colorDockWidget, SIGNAL(colorOrDeltaChanged()), this, SLOT(processDataChange()));
 
     QMetaObject::connectSlotsByName(this);
@@ -104,15 +101,8 @@ ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
 ImageProcessor::~ImageProcessor()
 {
     delete this->colorDockWidget;
-    delete this->graphicsScene;
-    //delete this->graphicsView;
     delete this->layerManager;
     delete this->toolsDockWidget;
-    delete this->image;
-    delete this->previewTimer;
-    delete[] this->imageMatchedPixels;
-    delete[] this->imageMaskLayer;
-    delete[] this->imageDisabledItemsOverlay;
 }
 
 QList<QDockWidget *> ImageProcessor::getDockWidgets()
@@ -130,17 +120,33 @@ void ImageProcessor::pick(QPoint point)
     //DONE: предусмотреть вариант клика вне картинки.
     //TODO: подумать, что делать при клике вне картинки.
     //DONE: предусмотреть клик по пикселю с альфа-каналом. (надо ли?) - не надо.
-    qDebug() << point << image->size();
-    if (point.x() >= 0 && point.y() >= 0 && point.x() < image->width() && point.y() < image->height())
-        this->colorDockWidget->setColor(this->image->pixel(point));
+    qDebug() << point << sourceImage.size();
+    if (point.x() >= 0 && point.y() >= 0 && point.x() < sourceImage.width() && point.y() < sourceImage.height())
+    {
+        if (colorDockWidget->method() == 0)
+            this->colorDockWidget->setColor(this->sourceImage.pixel(point));
+        else if (colorDockWidget->method() == 1)
+        {
+            double h = H[point.y()*sourceImage.width() + point.x()];
+            double s = S[point.y()*sourceImage.width() + point.x()];
+            double v = V[point.y()*sourceImage.width() + point.x()];
+
+            colorDockWidget->setLowerLimit(0, h - 15);
+            colorDockWidget->setUpperLimit(0, h + 15);
+            colorDockWidget->setLowerLimit(1, s - 0.05);
+            colorDockWidget->setUpperLimit(1, s + 0.05);
+            colorDockWidget->setLowerLimit(2, v - 0.05);
+            colorDockWidget->setUpperLimit(2, v + 0.05);
+        }
+    }
     else
         qDebug() << "ВНЕ КАРТИНКИ";
 }
 #include <QApplication>
 void ImageProcessor::processDataChange()
 {
-    this->previewTimer->stop();
-    this->previewTimer->start(0);
+    this->previewTimer.stop();
+    this->previewTimer.start(0);
     //this->calculateTimer->stop();
     //this->disableResults();
 }
@@ -163,21 +169,18 @@ void ImageProcessor::processPreview()
     QTime starttime = QTime::currentTime();
     int size = 0;
 
-    QImage *image = this->image;
+    QImage *image = &sourceImage;
     const uchar * rawData = image->bits();
     QRgb*  source = (QRgb*)rawData;
-    uchar *  mask = this->imageMaskLayer;
-    uchar *  matched = this->imageMatchedPixels;
-    const int pixels = this->imageNumberOfPixels;
 
     if (colorDockWidget->method() == 0)
     {
     QRgb  baseColor = this->colorDockWidget->rgb();
     double maxDelta = this->colorDockWidget->getDelta();
 
-    for (int i = 0; i < pixels; i++)
+    for (int i = 0; i < imageNumberOfPixels; i++)
     {
-        size += matched[i] = (uchar)((mask[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta));
+        size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta));
     }
 
     }
@@ -192,17 +195,17 @@ void ImageProcessor::processPreview()
 
         if (Hmin <= Hmax)
         {
-            for (int i = 0; i < pixels; i++)
-            size += matched[i] = (uchar)((mask[i] == 0) && (H[i] >= Hmin) && (H[i] <= Hmax) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
+            for (int i = 0; i < imageNumberOfPixels; i++)
+            size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && (H[i] >= Hmin) && (H[i] <= Hmax) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
         }
         else
         {
-            for (int i = 0; i < pixels; i++)
-            size += matched[i] = (uchar)((mask[i] == 0) && ((H[i] >= Hmin) || (H[i] <= Hmax)) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
+            for (int i = 0; i < imageNumberOfPixels; i++)
+            size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && ((H[i] >= Hmin) || (H[i] <= Hmax)) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
         }
     }
 
-    QImage *qImageMatchedPixels = new QImage(imageMatchedPixels, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
+    QImage *qImageMatchedPixels = new QImage(imageMatchedPixels.data(), image->width(), image->height(), image->width(), QImage::Format_Indexed8);
     qImageMatchedPixels->setColor(0, (uint)0x00000000);
     qImageMatchedPixels->setColor(1, (uint)MATCHED_COLOR);
 
@@ -236,7 +239,7 @@ void ImageProcessor::showResults(QVector<int> sizes)
     result += "\n" + tr("Min: ") + QString::number(min);
     result += "\n" + tr("Average: ") + QString::number((double)sum/sizes.size(), 'f', 2);
     result += "\n" + tr("Max: ") + QString::number(max);
-    int area = this->image->width()*this->image->height();
+    int area = this->sourceImage.width()*this->sourceImage.height();
     result += "\n" + tr("Occupied Area: ") + QString::number(((double)sum / area)*100, 'f', 2) + "%";
     result += "\n\n" + tr("Area size: ") + QString::number(area);
     this->resultsDockWidget->showResults(result);
@@ -263,7 +266,7 @@ void ImageProcessor::showFilteredResults(QVector<int> sizes)
     result += "\n" + tr("Filtered Sum: ") + QString::number(sum);
     result += "\n" + tr("Filtered Min: ") + QString::number(min);
     result += "\n" + tr("Filtered Average: ") + QString::number((double)sum/sizes.size(), 'f', 2);
-    result += "\n" + tr("Filtered Max: ") + QString::number(max);int area = this->image->width()*this->image->height();
+    result += "\n" + tr("Filtered Max: ") + QString::number(max);int area = this->sourceImage.width()*this->sourceImage.height();
     result += "\n" + tr("Filtered Occupied Area: ") + QString::number(((double)sum / area)*100, 'f', 2) + "%";
     this->resultsDockWidget->showFilteredResults(result);
     qDebug() << "showFilteredResults" << starttime.msecsTo(QTime::currentTime()) << sum;
@@ -281,7 +284,7 @@ void ImageProcessor::hideFilteredResults()
 void ImageProcessor::processCalculate(int sum)
 {
     QTime starttime = QTime::currentTime();
-    int width = this->image->width();
+    int width = this->sourceImage.width();
     //collectingpoints Нужно ещё оптимизировать.
 
     if (this->property("areasPoints").isValid())
@@ -293,8 +296,8 @@ void ImageProcessor::processCalculate(int sum)
 
     QList<int> sizes;
 
-    for (int y = 0; y < image->height(); y++)
-        for (int x = 0; x < image->width(); x++)
+    for (int y = 0; y < sourceImage.height(); y++)
+        for (int x = 0; x < sourceImage.width(); x++)
         {
             if (imageMatchedPixels[y*width + x] == (uchar)1)
             {
@@ -310,7 +313,7 @@ void ImageProcessor::processCalculate(int sum)
                     y1 = y1 + 1;
                     int spanLeft = 0;
                     int spanRight = 0;
-                    while (y1 < image->height() && (imageMatchedPixels[y1*width + point.x()] == (uchar)1))
+                    while (y1 < sourceImage.height() && (imageMatchedPixels[y1*width + point.x()] == (uchar)1))
                     {
                         imageMatchedPixels[y1*width + point.x()] = (uchar)2;
                         size++;
@@ -334,7 +337,7 @@ void ImageProcessor::processCalculate(int sum)
                                 spanLeft = 0;
 
 
-                        if (spanRight == 0 && point.x() < image->width() - 1 && (imageMatchedPixels[y1*width + point.x()+1] == (uchar)1))
+                        if (spanRight == 0 && point.x() < sourceImage.width() - 1 && (imageMatchedPixels[y1*width + point.x()+1] == (uchar)1))
                         {
                             QPoint newpoint;
                             newpoint.setX(point.x()+1);
@@ -344,7 +347,7 @@ void ImageProcessor::processCalculate(int sum)
                         }
                         else
                         {
-                            if (spanRight == 1 && point.x() < image->width() - 1 && imageMatchedPixels[y1*width + point.x()+1] == 0)
+                            if (spanRight == 1 && point.x() < sourceImage.width() - 1 && imageMatchedPixels[y1*width + point.x()+1] == 0)
                                 spanRight = 0;
                         }
 
@@ -370,13 +373,13 @@ void ImageProcessor::processCalculate(int sum)
 
 void ImageProcessor::processMaskChange()
 {
-    QImage *qImageMask = new QImage(this->imageMaskLayer, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
+    QImage *qImageMask = new QImage(this->imageMaskLayer.data(), sourceImage.width(), sourceImage.height(), sourceImage.width(), QImage::Format_Indexed8);
     qImageMask->setColor(0, (uint)0x00000000);
     qImageMask->setColor(1, (uint)MASK_COLOR);
     this->layerManager->updateImageMask(qImageMask);
     delete qImageMask;
-    this->previewTimer->stop();
-    this->previewTimer->start(50);
+    this->previewTimer.stop();
+    this->previewTimer.start(50);
    // qApp->processEvents();
     //this->processDataChange();
 }
@@ -384,9 +387,7 @@ void ImageProcessor::processMaskChange()
 void ImageProcessor::drawCircleOnMask(int x, int y, int radius, uchar value)
 {
     QTime starttime = QTime::currentTime();
-    qDebug() << "drawCircleOnArray";
-    this->drawCircleOnArray(this->imageMaskLayer, x, y, this->image->width(), this->image->height(), radius, value);
-    qDebug() << "drawCircleOnMask" << starttime.msecsTo(QTime::currentTime());
+    this->drawCircleOnArray(this->imageMaskLayer.data(), x, y, this->sourceImage.width(), this->sourceImage.height(), radius, value);
     this->processMaskChange();
 }
 
@@ -407,8 +408,6 @@ void ImageProcessor::drawCircleOnArray(uchar *array, int x, int y, int width, in
     int yEnd = height - 1;
     if (y + radius < height)
         yEnd = y + radius;
-
-    qDebug() << xStart << xEnd << yStart << yEnd;
 
     for (int yc = yStart; yc <= yEnd; yc++)
         for (int xc = xStart; xc <= xEnd; xc++)
@@ -438,12 +437,12 @@ void ImageProcessor::updateDisabledItemsOverlay(OnePointInfo *areasPoints, int s
     int *sizes_c_array = sizes.data();
     int min = this->toolsDockWidget->minSize();
     int max = this->toolsDockWidget->maxSize();
-    uint32_t pixelsInImage = this->image->width()*this->image->height();
+    uint32_t pixelsInImage = this->sourceImage.width()*this->sourceImage.height();
     uint32_t points = sizes.size();
     if (this->toolsDockWidget->isSizeRangeEnabled())
     {
         QList<int> sizes_filtered;
-        int width = this->image->width();
+        int width = this->sourceImage.width();
         for (int i = 0; i < pixelsInImage; i++)
             this->imageDisabledItemsOverlay[i] = (uchar)0;
         for (int i = 0; i < size; i++)
@@ -461,7 +460,7 @@ void ImageProcessor::updateDisabledItemsOverlay(OnePointInfo *areasPoints, int s
         }
 
 
-        QImage *imageOverlay = new QImage(this->imageDisabledItemsOverlay, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
+        QImage *imageOverlay = new QImage(this->imageDisabledItemsOverlay.data(), sourceImage.width(), sourceImage.height(), sourceImage.width(), QImage::Format_Indexed8);
         imageOverlay->setColor(0, (uint)0x00000000);
         imageOverlay->setColor(1, (uint)FILTERED_COLOR);
         this->layerManager->updateDisabletItemsOverlayLayer(imageOverlay);
@@ -472,7 +471,7 @@ void ImageProcessor::updateDisabledItemsOverlay(OnePointInfo *areasPoints, int s
     {
         for (int i = 0; i < pixelsInImage; i++)
             this->imageDisabledItemsOverlay[i] = (uchar)0;
-        QImage *imageOverlay = new QImage(this->imageDisabledItemsOverlay, image->width(), image->height(), image->width(), QImage::Format_Indexed8);
+        QImage *imageOverlay = new QImage(this->imageDisabledItemsOverlay.data(), sourceImage.width(), sourceImage.height(), sourceImage.width(), QImage::Format_Indexed8);
         imageOverlay->setColor(0, (uint)0x00000000);
         this->layerManager->updateDisabletItemsOverlayLayer(imageOverlay);
         delete imageOverlay;
@@ -591,7 +590,6 @@ void ImageProcessor::on_toolsDockWidget_sizeRangeEnabledChanged()
 
 void ImageProcessor::on_graphicsView_mouseLeaved()
 {
-    qDebug() << "!!!!!!!!!!!!!!!!!LEAVED@@@@@@@@@@@@";
     if ((toolsDockWidget->isDrawingMask()) || (toolsDockWidget->isErasingMask()))
         layerManager->updateBrushVisibility(false);
 }
@@ -632,7 +630,6 @@ void ImageProcessor::hover(QPoint point)
                     if (index == areasPoints[i].areaIndex)
                         size++;
                 }
-            qDebug() << "Size is" << size;
             emit notifyHoverItemSize(size);
         }
     }

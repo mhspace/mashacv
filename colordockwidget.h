@@ -26,6 +26,8 @@ public:
     int method();
     float lowerLimit(int i);
     float upperLimit(int i);
+    void setLowerLimit(int i, float limit);
+    void setUpperLimit(int i, float limit);
 
 protected:
     void changeEvent(QEvent *e);

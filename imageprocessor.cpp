@@ -175,13 +175,13 @@ void ImageProcessor::processPreview()
 
     if (colorDockWidget->method() == 0)
     {
-    QRgb  baseColor = this->colorDockWidget->rgb();
-    double maxDelta = this->colorDockWidget->getDelta();
+        QRgb  baseColor = this->colorDockWidget->rgb();
+        double maxDelta = this->colorDockWidget->getDelta();
 
-    for (int i = 0; i < imageNumberOfPixels; i++)
-    {
-        size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta));
-    }
+        for (int i = 0; i < imageNumberOfPixels; i++)
+        {
+            size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && (CIE76_RGB(source[i], baseColor) < maxDelta));
+        }
 
     }
     else if (colorDockWidget->method() == 1)
@@ -196,12 +196,12 @@ void ImageProcessor::processPreview()
         if (Hmin <= Hmax)
         {
             for (int i = 0; i < imageNumberOfPixels; i++)
-            size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && (H[i] >= Hmin) && (H[i] <= Hmax) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
+                size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && (H[i] >= Hmin)  && (H[i] <= Hmax)  && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
         }
         else
         {
             for (int i = 0; i < imageNumberOfPixels; i++)
-            size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && ((H[i] >= Hmin) || (H[i] <= Hmax)) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
+                size += imageMatchedPixels[i] = (uchar)((imageMaskLayer[i] == 0) && ((H[i] >= Hmin) || (H[i] <= Hmax)) && (S[i] >= Smin) && (S[i] <= Smax) && (V[i] >= Vmin) && (V[i] <= Vmax) );
         }
     }
 

@@ -122,7 +122,7 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
         painter.setBrush(backgroundBrush);
     else
         painter.setBrush(qApp->palette().background());
-    painter.drawRect(ui->previewLabel->x(), ui->upperRangeLimit->y(), ui->previewLabel->width(), ui->upperRangeLimit->height());
+    painter.drawRect(ui->previewLabel->x(), ui->upperRangeLimit->y(), ui->previewLabel->width(), ui->upperRangeLimit->height() - 1);
 
     QBrush paintBrush;
     if (isBackgroundSet)
@@ -146,19 +146,22 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
         {
             painter.setBrush(paintBrush);
 
-            painter.drawRect(ui->previewLabel->x(), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult , ui->lowerRangeLimit->height());
-            painter.drawRect(ui->previewLabel->x() + lowerRangeLimit()*xMult, ui->lowerRangeLimit->y(), ui->previewLabel->width() - lowerRangeLimit()*xMult, ui->lowerRangeLimit->height());
+            painter.drawRect(ui->previewLabel->x(), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult , ui->lowerRangeLimit->height() - 1);
+            painter.drawRect(ui->previewLabel->x() + lowerRangeLimit()*xMult, ui->lowerRangeLimit->y(), ui->previewLabel->width() - lowerRangeLimit()*xMult, ui->lowerRangeLimit->height() - 1);
         }
         else
         {
+            /**/painter.setPen(Qt::red);
+            /**/painter.drawRect(ui->previewLabel->x(), ui->upperRangeLimit->y(), ui->previewLabel->width(), ui->upperRangeLimit->height() - 1);
+            painter.setPen(qApp->palette().foreground().color());
             painter.setBrush(Qt::red);
-            painter.drawRect(ui->previewLabel->x() + (lowerRangeLimit()*xMult), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult - (lowerRangeLimit()*xMult), ui->lowerRangeLimit->height());
+            painter.drawRect(ui->previewLabel->x() + (lowerRangeLimit()*xMult), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult - (lowerRangeLimit()*xMult), ui->lowerRangeLimit->height() - 1);
         }
     }
     else
     {
         painter.setBrush(paintBrush);
-        painter.drawRect(ui->previewLabel->x() + (lowerRangeLimit()*xMult), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult - (lowerRangeLimit()*xMult), ui->lowerRangeLimit->height());
+        painter.drawRect(ui->previewLabel->x() + (lowerRangeLimit()*xMult), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult - (lowerRangeLimit()*xMult), ui->lowerRangeLimit->height() - 1);
     }
 
 
@@ -201,7 +204,7 @@ void RangeControl::mousePressEvent(QMouseEvent *event)
         QPointF pos = event->posF();
         double xMult = ui->previewLabel->width()*1.0/max();
         lastXpos = pos.x();
-        if (abs((ui->previewLabel->x() + (lowerRangeLimit()*xMult)) - pos.x()) > abs((ui->previewLabel->x() + (upperRangeLimit()*xMult)) - pos.x()))
+        if (abs((ui->previewLabel->x() + (lowerRangeLimit()*xMult)) - pos.x()) >= abs((ui->previewLabel->x() + (upperRangeLimit()*xMult)) - pos.x()))
         //moving upperslider
         {
             qDebug() << "upper";

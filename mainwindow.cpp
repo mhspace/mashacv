@@ -51,7 +51,12 @@ void MainWindow::openImage(QString initFileName)
                 this->centralWidget()->layout()->addWidget(this->imageProcessor->getMainWidget());
                 QList<QDockWidget*> docks = this->imageProcessor->getDockWidgets();
                 for (int i = 0; i < docks.count(); i++)
-                    this->addDockWidget(Qt::LeftDockWidgetArea, docks.at(i));
+                {
+                    if (docks.at(i)->objectName() == "ColorDockWidget")
+                        this->addDockWidget(Qt::TopDockWidgetArea, docks.at(i));
+                    else
+                        this->addDockWidget(Qt::LeftDockWidgetArea, docks.at(i));
+                }
                 ui->menuView->addMenu(this->createPopupMenu()); //TODO: переделать это
                 this->imageProcessor->setObjectName("imageProcessor");
             }

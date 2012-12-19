@@ -9,6 +9,7 @@ ColorDockWidget::ColorDockWidget(QWidget *parent) :
     ui(new Ui::ColorDockWidget)
 {
     ui->setupUi(this);
+    this->setObjectName("ColorDockWidget");
     this->colorPrivate = new QColor(Qt::black);
     this->setColor(*(this->colorPrivate));
 

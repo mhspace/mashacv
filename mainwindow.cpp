@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->mainToolBar->hide(); //пока не использую
     //уже использую  ui->statusBar->hide(); //пока не использую
     this->setWindowIcon(QIcon(":/icons/icon.png"));
+    //this->setRussianLanguage();
 }
 
 MainWindow::~MainWindow()
@@ -78,6 +79,7 @@ void MainWindow::setRussianLanguage()
 
 void MainWindow::setEnglishLanguage()
 {
+
 }
 
 void MainWindow::on_imageProcessor_notifyHoverItemSize(int size)

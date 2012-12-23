@@ -46,6 +46,13 @@ ColorDockWidget::ColorDockWidget(QWidget *parent) :
     ui->thresholdDoubleSpinBox->setMaximum(CIEDE2000_MAX);
     ui->thresholdSlider->setMinimum(0);
     ui->thresholdSlider->setMaximum((int)(CIEDE2000_MAX*CIEDE2000_TOINTmult));
+
+
+    QSizePolicy policy;
+    policy.setHorizontalPolicy(QSizePolicy::Preferred);
+    policy.setVerticalPolicy(QSizePolicy::Fixed);
+
+    this->widget()->setSizePolicy(policy);
 }
 
 ColorDockWidget::~ColorDockWidget()
@@ -190,10 +197,10 @@ void ColorDockWidget::on_methodBox_currentIndexChanged(int index)
     if (index == 0)
     {
         ui->colorModel_channelRanges->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        ui->color_colorDelta->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        ui->color_colorDelta->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     }
     else if (index == 1) {
         ui->color_colorDelta->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        ui->colorModel_channelRanges->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        ui->colorModel_channelRanges->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     }
 }

@@ -19,6 +19,12 @@ ToolsDockWidget::ToolsDockWidget(unsigned int maxAreaSize, int maxBrushSize, QWi
     ui->minSizeSpinBox->setMaximum(maxAreaSize);
 
     this->setMaxSize(maxAreaSize);
+
+    QSizePolicy policy;
+    policy.setHorizontalPolicy(QSizePolicy::Preferred);
+    policy.setVerticalPolicy(QSizePolicy::Fixed);
+
+    this->widget()->setSizePolicy(policy);
 }
 
 ToolsDockWidget::~ToolsDockWidget()

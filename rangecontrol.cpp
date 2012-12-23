@@ -129,12 +129,13 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
     {
         QLinearGradient selGradient(0, 0, 0, 1);
         QColor selColor = qApp->palette().highlight().color();
+        QColor selInvertedColor(255 - selColor.red(), 255 - selColor.green(), 255 - selColor.blue(), 255);
         selGradient.setCoordinateMode(QGradient::ObjectBoundingMode);
         selGradient.setColorAt(0, selColor);
         selGradient.setColorAt(0.2, selColor);
         selGradient.setColorAt(0.5, QColor (0, 0, 0, 0));
-        selGradient.setColorAt(0.8, selColor);
-        selGradient.setColorAt(1, selColor);
+        selGradient.setColorAt(0.8, selInvertedColor);
+        selGradient.setColorAt(1, selInvertedColor);
         paintBrush = QBrush(selGradient);
     }
     else
@@ -151,7 +152,9 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
         }
         else
         {
-            /**/painter.setPen(Qt::red);
+            QPen pen(Qt::red);
+            pen.setWidth(5);
+            /**/painter.setPen(pen);
             /**/painter.drawRect(ui->previewLabel->x(), ui->upperRangeLimit->y(), ui->previewLabel->width(), ui->upperRangeLimit->height() - 1);
             painter.setPen(qApp->palette().foreground().color());
             painter.setBrush(Qt::red);

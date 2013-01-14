@@ -239,9 +239,39 @@ void ImageProcessor::showResults(QVector<int> sizes)
     result += "\n" + tr("Min: ") + QString::number(min);
     result += "\n" + tr("Average: ") + QString::number((double)sum/sizes.size(), 'f', 2);
     result += "\n" + tr("Max: ") + QString::number(max);
+
+    if (sizes.size() > 0)
+    {
+    double somesum = 0;
+    for (int i = 0; i < sizes.size(); i++)
+    {
+        somesum += sizes.at(i)*sizes.at(i);
+    }
+    result += "\n" + tr("Variance: ") + QString::number((somesum/sizes.size() - ((sum/sizes.size())*(sum/sizes.size()))));
+    }
     int area = this->sourceImage.width()*this->sourceImage.height();
     result += "\n" + tr("Occupied Area: ") + QString::number(((double)sum / area)*100, 'f', 2) + "%";
     result += "\n\n" + tr("Area size: ") + QString::number(area);
+
+    /*if (sizes.size() > 0)
+    {
+    //counting variance. 1
+    double average = (double)sum/sizes.size();
+    double somesum = 0;
+    for (int i = 0; i < sizes.size(); i++)
+    {
+        somesum += ((sizes.at(i) - average)*(sizes.at(i) - average));
+    }
+    qDebug() << "variance1" << (somesum/sizes.size());
+
+    //counting variance. 2
+    somesum = 0;
+    for (int i = 0; i < sizes.size(); i++)
+    {
+        somesum += sizes.at(i)*sizes.at(i);
+    }
+    qDebug() << "variance2" << (somesum/sizes.size() - ((sum/sizes.size())*(sum/sizes.size())));
+    }*/
     this->resultsDockWidget->showResults(result);
     qDebug() << "showResults" << starttime.msecsTo(QTime::currentTime()) << sum;
 
@@ -267,6 +297,15 @@ void ImageProcessor::showFilteredResults(QVector<int> sizes)
     result += "\n" + tr("Filtered Min: ") + QString::number(min);
     result += "\n" + tr("Filtered Average: ") + QString::number((double)sum/sizes.size(), 'f', 2);
     result += "\n" + tr("Filtered Max: ") + QString::number(max);int area = this->sourceImage.width()*this->sourceImage.height();
+    if (sizes.size() > 0)
+    {
+    double somesum = 0;
+    for (int i = 0; i < sizes.size(); i++)
+    {
+        somesum += sizes.at(i)*sizes.at(i);
+    }
+    result += "\n" + tr("Filtered Variance: ") + QString::number((somesum/sizes.size() - ((sum/sizes.size())*(sum/sizes.size()))));
+    }
     result += "\n" + tr("Filtered Occupied Area: ") + QString::number(((double)sum / area)*100, 'f', 2) + "%";
     this->resultsDockWidget->showFilteredResults(result);
     qDebug() << "showFilteredResults" << starttime.msecsTo(QTime::currentTime()) << sum;

@@ -146,7 +146,7 @@ void ImageProcessor::pick(QPoint point)
 void ImageProcessor::processDataChange()
 {
     this->previewTimer.stop();
-    this->previewTimer.start(0);
+    this->previewTimer.start(20);
     //this->calculateTimer->stop();
     //this->disableResults();
 }
@@ -168,6 +168,11 @@ void ImageProcessor::processPreview()
 {
     QTime starttime = QTime::currentTime();
     int size = 0;
+
+    int maskSum = 0;
+    for (int i = 0; i < imageNumberOfPixels; i++)
+        maskSum += imageMaskLayer[i] == 0;
+    this->setProperty("maskSum", maskSum);
 
     QImage *image = &sourceImage;
     const uchar * rawData = image->bits();
@@ -250,7 +255,9 @@ void ImageProcessor::showResults(QVector<int> sizes)
     result += "\n" + tr("Variance: ") + QString::number((somesum/sizes.size() - ((sum/sizes.size())*(sum/sizes.size()))));
     }
     int area = this->sourceImage.width()*this->sourceImage.height();
+    int selectedArea = this->property("maskSum").toInt();
     result += "\n" + tr("Occupied Area: ") + QString::number(((double)sum / area)*100, 'f', 2) + "%";
+    result += "\n" + tr("Occupied Unexcluded Area: ") + QString::number(((double)sum / selectedArea)*100, 'f', 2) + "%";
     result += "\n\n" + tr("Area size: ") + QString::number(area);
 
     /*if (sizes.size() > 0)
@@ -306,7 +313,9 @@ void ImageProcessor::showFilteredResults(QVector<int> sizes)
     }
     result += "\n" + tr("Filtered Variance: ") + QString::number((somesum/sizes.size() - ((sum/sizes.size())*(sum/sizes.size()))));
     }
+    int selectedArea = this->property("maskSum").toInt();
     result += "\n" + tr("Filtered Occupied Area: ") + QString::number(((double)sum / area)*100, 'f', 2) + "%";
+    result += "\n" + tr("Filtered Occupied Unexcluded Area: ") + QString::number(((double)sum / selectedArea)*100, 'f', 2) + "%";
     this->resultsDockWidget->showFilteredResults(result);
     qDebug() << "showFilteredResults" << starttime.msecsTo(QTime::currentTime()) << sum;
 }

@@ -16,6 +16,7 @@ ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
     QObject(parent)
 {
     this->sourceImage.load(fileName);
+    this->fileName = fileName;
     this->imageNumberOfPixels = this->sourceImage.width()*this->sourceImage.height();
     this->imageMatchedPixels.resize(imageNumberOfPixels);
     this->imageMaskLayer.resize(imageNumberOfPixels);
@@ -83,8 +84,8 @@ ImageProcessor::ImageProcessor(QString fileName, QObject *parent) :
     connect(graphicsView, SIGNAL(mouseLeaved()), this, SLOT(on_graphicsView_mouseLeaved()));
     this->colorDockWidget = new ColorDockWidget();
     this->layerManager = new LayerDockWidget(&graphicsScene);
-    this->resultsDockWidget = new ResultsDockWidget();
-    this->toolsDockWidget = new ToolsDockWidget(this->imageNumberOfPixels, (this->sourceImage.width() > this->sourceImage.height()) ? (this->sourceImage.width()) : (this->sourceImage.height()));
+    this->resultsDockWidget = new ResultsDockWidget(fileName);
+    this->toolsDockWidget = new ToolsDockWidget(this->imageNumberOfPixels, (this->sourceImage.width() > this->sourceImage.height()) ? (this->sourceImage.width()) : (this->sourceImage.height()), fileName);
     this->toolsDockWidget->setObjectName("toolsDockWidget");
     this->toolsDockWidget->QObject::setParent(this);
     this->layerManager->updateBaseImage(&sourceImage);
@@ -636,6 +637,65 @@ void ImageProcessor::on_toolsDockWidget_sizeRangeEnabledChanged()
     this->processDataChange();
 }
 
+void ImageProcessor::on_toolsDockWidget_maskSaveMenuTriggered(QString filename)
+{
+    QImage mask(imageMaskLayer.data(), sourceImage.width(), sourceImage.height(), QImage::Format_Indexed8);
+    mask.setColor(0, (uint)0xFF000000);
+    mask.setColor(1, (uint)0xFFFFFFFF);
+    mask.setColor(2, (uint)0xFFFF0000);
+    qDebug() << mask.pixel(1, 1);
+    mask.save(filename);
+}
+
+void ImageProcessor::on_toolsDockWidget_maskLoadMenuTriggered(QString filename)
+{
+    qDebug() << "lalala";
+    QFileInfo fileInfo(filename);
+    if (fileInfo.exists())
+    {
+        QImage mask(filename);
+        if (mask.format() == QImage::Format_Indexed8)
+        {
+            if (mask.height() == sourceImage.height() && mask.width() == sourceImage.width())
+            {
+                uchar * target_mask = imageMaskLayer.data();
+                uchar * source_mask = mask.bits();
+                memcpy(target_mask, source_mask, mask.width()*mask.height());
+                processMaskChange();
+            }
+            else
+                qDebug() << "mask and image sizes mismatch";
+        }
+        else
+        {
+            qDebug() << "Mask format error";
+        }
+    }
+}
+
+void ImageProcessor::on_toolsDockWidget_otherSaveMenuTriggered(QString filename)
+{
+    qDebug() << filename;
+    QSettings otherConf(filename, QSettings::IniFormat);
+    otherConf.setValue("Color/colorPrefs", colorDockWidget->dataForSave());
+    otherConf.setValue("SizeFilter/prefs", toolsDockWidget->dataForSave());
+    otherConf.sync();
+    otherConf.deleteLater();
+}
+
+void ImageProcessor::on_toolsDockWidget_otherLoadMenuTriggered(QString filename)
+{
+    QSettings otherConf(filename, QSettings::IniFormat);
+    if (otherConf.value("Color/colorPrefs").isValid())
+    {
+        colorDockWidget->fromData(otherConf.value("Color/colorPrefs"));
+    }
+    if (otherConf.value("SizeFilter/prefs").isValid())
+    {
+        toolsDockWidget->fromData(otherConf.value("SizeFilter/prefs"));
+    }
+}
+
 void ImageProcessor::on_graphicsView_mouseLeaved()
 {
     if ((toolsDockWidget->isDrawingMask()) || (toolsDockWidget->isErasingMask()))
@@ -681,6 +741,85 @@ void ImageProcessor::hover(QPoint point)
             emit notifyHoverItemSize(size);
         }
     }
+}
+
+void ImageProcessor::loadMySettings()
+{
+    QFileInfo imageFile(fileName);
+    QDir imageDir(imageFile.absoluteDir());
+    QString otherPath;
+    QString maskPath;
+    QStringList maskFilesToCheck;
+    QStringList otherFilesToCheck;
+    maskFilesToCheck.append(fileName + ".mask.png");
+    otherFilesToCheck.append(fileName + ".MashaCV.conf");
+    maskFilesToCheck.append(imageDir.absoluteFilePath("mask.png"));
+    otherFilesToCheck.append(imageDir.absoluteFilePath("MashaCV.conf"));
+    while (imageDir.cdUp())
+    {
+        maskFilesToCheck.append(imageDir.absoluteFilePath("mask.png"));
+        otherFilesToCheck.append(imageDir.absoluteFilePath("MashaCV.conf"));
+    }
+
+    foreach (QString str, maskFilesToCheck)
+    {
+        QFileInfo inf1(str);
+        if (maskPath.isEmpty() && inf1.exists())
+            maskPath = str;
+    }
+    foreach (QString str, otherFilesToCheck)
+    {
+        QFileInfo inf1(str);
+        if (otherPath.isEmpty() && inf1.exists())
+            otherPath = str;
+    }
+    if (!maskPath.isEmpty())
+    {
+        qDebug() << "loading" << maskPath;
+        on_toolsDockWidget_otherLoadMenuTriggered(maskPath);
+    }
+    if (!otherPath.isEmpty())
+    {
+        qDebug() << "loading" << otherPath;
+        on_toolsDockWidget_otherLoadMenuTriggered(otherPath);
+    }
+    //говнокод
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    qApp->processEvents();
+    processPreview();
+}
+
+void ImageProcessor::makeAllThings()
+{
+    this->resultsDockWidget->on_pushButton_clicked();
 }
 
 

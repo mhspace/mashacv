@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+#include <QSettings>
 #include <QString>
 #include <QImage>
 #include <QBitmap>
@@ -39,6 +40,8 @@ public:
     ~ImageProcessor();
     QList<QDockWidget*> getDockWidgets();
     QWidget *getMainWidget();
+    void loadMySettings();
+    void makeAllThings();
     
 signals:
     void notifyHoverItemSize(int size);
@@ -64,12 +67,17 @@ public slots:
     void on_toolsDockWidget_maskBrushSizeChanged();
     void on_toolsDockWidget_sizeRangeChanged();
     void on_toolsDockWidget_sizeRangeEnabledChanged();
+    void on_toolsDockWidget_maskSaveMenuTriggered(QString filename);
+    void on_toolsDockWidget_maskLoadMenuTriggered(QString filename);
+    void on_toolsDockWidget_otherSaveMenuTriggered(QString filename);
+    void on_toolsDockWidget_otherLoadMenuTriggered(QString filename);
     void on_graphicsView_mouseLeaved();
     void on_graphicsView_mouseEntered();
     void hover(QPoint point);
 
 
 private:
+
     QImage sourceImage;
     unsigned int imageNumberOfPixels;
     QVector<uchar> imageMatchedPixels;
@@ -92,6 +100,7 @@ private:
     void disableResults();
     QPointF lastPoint;
     QGraphicsPixmapItem *generateBrushImage(QRgb color);
+    QString fileName;
 };
 
 #endif // IMAGEPROCESSOR_H

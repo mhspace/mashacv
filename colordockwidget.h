@@ -29,6 +29,9 @@ public:
     void setLowerLimit(int i, float limit);
     void setUpperLimit(int i, float limit);
 
+    QVariant dataForSave();
+    void fromData(QVariant data);
+
 protected:
     void changeEvent(QEvent *e);
     

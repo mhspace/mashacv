@@ -13,11 +13,20 @@ MainWindow::MainWindow(QWidget *parent) :
     //уже использую  ui->statusBar->hide(); //пока не использую
     this->setWindowIcon(QIcon(":/icons/icon.png"));
     //this->setRussianLanguage();
+    this->exit = false;
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::makeAllThings()
+{
+    this->imageProcessor->makeAllThings();
+    this->exit = true;
+    QTimer::singleShot(0, this, SLOT(loopStarted()));
 }
 
 #include <QFileDialog>
@@ -66,6 +75,8 @@ void MainWindow::openImage(QString initFileName)
         }
     }
     this->setCursor(cursor);
+    qApp->processEvents();
+    imageProcessor->loadMySettings();
 }
 
 //TODO: переписать это
@@ -128,4 +139,13 @@ void MainWindow::dropEvent(QDropEvent *event)
 void MainWindow::on_actionQuit_triggered()
 {
     qApp->exit();
+}
+
+void MainWindow::loopStarted()
+{
+
+    if (exit)
+    {
+        qApp->exit();
+    }
 }

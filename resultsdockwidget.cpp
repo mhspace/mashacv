@@ -1,12 +1,13 @@
 #include "resultsdockwidget.h"
 #include "ui_resultsdockwidget.h"
 
-ResultsDockWidget::ResultsDockWidget(QWidget *parent) :
+ResultsDockWidget::ResultsDockWidget(QString fileName, QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::ResultsDockWidget)
 {
     ui->setupUi(this);
     this->disableResults();
+    this->fileName = fileName;
 }
 
 ResultsDockWidget::~ResultsDockWidget()
@@ -53,4 +54,14 @@ void ResultsDockWidget::changeEvent(QEvent *e)
     default:
         break;
     }
+}
+
+void ResultsDockWidget::on_pushButton_clicked()
+{
+    QString fn = this->fileName+"." + QDateTime::currentDateTime().toString()+".txt";
+    QFile file(fn);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&file);
+    out << ui->plainTextEdit->toPlainText();
+    file.close();
 }

@@ -151,6 +151,35 @@ void ColorDockWidget::setUpperLimit(int i, float limit)
     }
 }
 
+QVariant ColorDockWidget::dataForSave()
+{
+    QMap<QString, QVariant> data;
+    data["method"] = this->method();
+    data["color"] = *this->getColor();
+    data["delta"] = this->getDelta();
+    for (int i = 0; i < 3; i++)
+    {
+        data["lowerRangeLimit-"+QString::number(i)] = this->lowerLimit(i);
+        data["upperRangeLimit-"+QString::number(i)] = this->upperLimit(i);
+    }
+    return data;
+}
+
+void ColorDockWidget::fromData(QVariant data)
+{
+    QMap<QString, QVariant> map_data = data.toMap();
+    ui->methodBox->setCurrentIndex(map_data["method"].toInt());
+
+    setColor(map_data["color"].value<QColor>());
+    ui->thresholdDoubleSpinBox->setValue(map_data["delta"].toDouble());
+
+    for (int i = 0; i < 3; i++)
+    {
+        setLowerLimit(i, map_data["lowerRangeLimit-"+QString::number(i)].toFloat());
+        setUpperLimit(i, map_data["upperRangeLimit-"+QString::number(i)].toFloat());
+    }
+}
+
 
 
 void ColorDockWidget::changeEvent(QEvent *e)

@@ -20,6 +20,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void makeAllThings();
     
 public slots:
     void openImage(QString initFileName = "");
@@ -34,11 +35,13 @@ protected:
     
 private slots:
     void on_actionQuit_triggered();
+    void loopStarted();
 
 private:
     Ui::MainWindow *ui;
     ImageProcessor *imageProcessor;
     bool isImageOpened;
+    bool exit;
 };
 
 #endif // MAINWINDOW_H

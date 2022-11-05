@@ -176,15 +176,15 @@ void RangeControl::mouseMoveEvent(QMouseEvent *event)
     double xMult = max()/ui->previewLabel->width();
     if (draggingSlider == RangeControl::lowerRangeLimitSlider)
     {
-        this->setLowerRangeLimit( (this->lowerRangeLimit() + (event->posF().x() - lastXpos)*xMult));
-        qDebug() << (this->lowerRangeLimit() + (event->posF().x() - lastXpos)*xMult);
+        this->setLowerRangeLimit( (this->lowerRangeLimit() + (event->localPos().x() - lastXpos)*xMult));
+        qDebug() << (this->lowerRangeLimit() + (event->localPos().x() - lastXpos)*xMult);
     }
     else
     {
-        this->setUpperRangeLimit( (this->upperRangeLimit() + (event->posF().x() - lastXpos)*xMult));
-        qDebug() << (this->upperRangeLimit() + (event->posF().x() - lastXpos)*xMult);
+        this->setUpperRangeLimit( (this->upperRangeLimit() + (event->localPos().x() - lastXpos)*xMult));
+        qDebug() << (this->upperRangeLimit() + (event->localPos().x() - lastXpos)*xMult);
     }
-    lastXpos = event->posF().x();
+    lastXpos = event->localPos().x();
 }
 
 void RangeControl::on_lowerRangeLimit_valueChanged(double arg1)
@@ -204,7 +204,7 @@ void RangeControl::mousePressEvent(QMouseEvent *event)
     if (ui->previewLabel->geometry().contains(event->pos()) && event->buttons() == Qt::LeftButton)
     {
         isDraggingSlider = true;
-        QPointF pos = event->posF();
+        QPointF pos = event->localPos();
         double xMult = ui->previewLabel->width()*1.0/max();
         lastXpos = pos.x();
         if (abs((ui->previewLabel->x() + (lowerRangeLimit()*xMult)) - pos.x()) >= abs((ui->previewLabel->x() + (upperRangeLimit()*xMult)) - pos.x()))

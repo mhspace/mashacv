@@ -6,6 +6,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QToolTip>
+#include <QTranslator>
 
 #include "imageprocessor.h"
 
@@ -43,6 +44,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     ImageProcessor *imageProcessor;
+    QTranslator *ru;
     bool isImageOpened;
     bool exit;
 };

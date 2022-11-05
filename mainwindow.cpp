@@ -12,9 +12,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->mainToolBar->hide(); //пока не использую
     //уже использую  ui->statusBar->hide(); //пока не использую
     this->setWindowIcon(QIcon(":/icons/icon.png"));
+    QTranslator* transl = new QTranslator();
+    transl->load(":/languages/ru");
+    this->ru = transl;
     //this->setRussianLanguage();
     this->exit = false;
-
 }
 
 MainWindow::~MainWindow()
@@ -83,14 +85,12 @@ void MainWindow::openImage(QString initFileName)
 #include <QTranslator>
 void MainWindow::setRussianLanguage()
 {
-    QTranslator* transl = new QTranslator();
-    transl->load(":/languages/ru");
-    qApp->installTranslator(transl);
+    qApp->installTranslator(this->ru);
 }
 
 void MainWindow::setEnglishLanguage()
 {
-
+    qApp->removeTranslator(this->ru);
 }
 
 void MainWindow::on_imageProcessor_notifyHoverItemSize(int size)

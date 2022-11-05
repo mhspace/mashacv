@@ -149,3 +149,19 @@ void MainWindow::loopStarted()
         qApp->exit();
     }
 }
+
+void MainWindow::on_actionOpen_triggered()
+{
+    this->openImage();
+}
+
+
+void MainWindow::on_actionRussian_triggered()
+{
+    this->setRussianLanguage();
+}
+
+void MainWindow::on_actionEnglish_triggered()
+{
+    this->setEnglishLanguage();
+}

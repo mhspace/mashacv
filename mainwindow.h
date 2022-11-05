@@ -36,6 +36,9 @@ protected:
 private slots:
     void on_actionQuit_triggered();
     void loopStarted();
+    void on_actionOpen_triggered();
+    void on_actionRussian_triggered();
+    void on_actionEnglish_triggered();
 
 private:
     Ui::MainWindow *ui;

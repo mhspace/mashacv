@@ -121,7 +121,7 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
     if (isBackgroundSet)
         painter.setBrush(backgroundBrush);
     else
-        painter.setBrush(qApp->palette().background());
+        painter.setBrush(qApp->palette().window());
     painter.drawRect(ui->previewLabel->x(), ui->upperRangeLimit->y(), ui->previewLabel->width(), ui->upperRangeLimit->height() - 1);
 
     QBrush paintBrush;
@@ -156,7 +156,7 @@ void RangeControl::paintEvent(QPaintEvent *paintEvent)
             pen.setWidth(5);
             /**/painter.setPen(pen);
             /**/painter.drawRect(ui->previewLabel->x(), ui->upperRangeLimit->y(), ui->previewLabel->width(), ui->upperRangeLimit->height() - 1);
-            painter.setPen(qApp->palette().foreground().color());
+            painter.setPen(qApp->palette().windowText().color());
             painter.setBrush(Qt::red);
             painter.drawRect(ui->previewLabel->x() + (lowerRangeLimit()*xMult), ui->lowerRangeLimit->y(), upperRangeLimit()*xMult - (lowerRangeLimit()*xMult), ui->lowerRangeLimit->height() - 1);
         }

@@ -413,8 +413,8 @@ void ImageProcessor::processCalculate(int sum)
 
     qDebug() << "calculate" << starttime.msecsTo(QTime::currentTime());
     //delete[] areasPoints;
-    this->setProperty("areasPoints", qVariantFromValue((void*)areasPoints));
-    this->setProperty("areasNumber", qVariantFromValue(sum));
+    this->setProperty("areasPoints", QVariant::fromValue((void*)areasPoints));
+    this->setProperty("areasNumber", QVariant::fromValue(sum));
     QVector<int> sizes_vector = sizes.toVector();
     this->showResults(sizes_vector);
     this->updateDisabledItemsOverlay(areasPoints, sum, sizes_vector);

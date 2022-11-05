@@ -31,7 +31,7 @@ void LayerDockWidget::updateLayer(int n, QGraphicsItem *layer)
     this->layers->replace(n, layer);
     this->layers->at(n)->setZValue(n);
     ((QGraphicsPixmapItem*)(this->layers->at(n)))->setAcceptedMouseButtons(Qt::NoButton);
-    ((QGraphicsPixmapItem*)(this->layers->at(n)))->setFlags(0);
+    ((QGraphicsPixmapItem*)(this->layers->at(n)))->setFlags((QGraphicsItem::GraphicsItemFlag)0);
     this->isLayerExsists->replace(n, true);
 }
 
@@ -45,7 +45,7 @@ void LayerDockWidget::updateLayer(int n, QImage *image)
     this->layers->replace(n, this->scene->addPixmap(QPixmap::fromImage(*image)));
     this->layers->at(n)->setZValue(n);
     ((QGraphicsPixmapItem*)(this->layers->at(n)))->setAcceptedMouseButtons(Qt::NoButton);
-    ((QGraphicsPixmapItem*)(this->layers->at(n)))->setFlags(0);
+    ((QGraphicsPixmapItem*)(this->layers->at(n)))->setFlags((QGraphicsItem::GraphicsItemFlag)0);
     this->isLayerExsists->replace(n, true);
 }
 

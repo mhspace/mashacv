@@ -4,11 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-
-#LIBS += -lkdeui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui widgets
 
 TARGET = MashaCV
 TEMPLATE = app
